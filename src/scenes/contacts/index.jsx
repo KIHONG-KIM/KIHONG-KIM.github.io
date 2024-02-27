@@ -29,9 +29,6 @@ const Contacts = () => {
   const day = dayjs(now);
   const [ datePicker, setDatePicker ] = useState(day);
   
-  // console.log(result.data, typeof(result.data))
-  // console.log(result.data[0],result.data[1] )
-
   const getTransactions = async () => {
     try {
       const getTransactions = await Req.get("/transaction")
@@ -54,11 +51,9 @@ const Contacts = () => {
           copy = result.data;
           setVal(copy);
         });
-
       } catch(err){
         console.log(err);
       }
-
   } 
 
   // 테스트용 버튼
@@ -138,7 +133,7 @@ const Contacts = () => {
         </Box>
         {/* 2nd */}
         <Box
-            gridColumn="span 3"
+            gridColumn="span 2"
             backgroundColor={colors.primary[400]}
             display="flex"
             alignItems="center"
@@ -157,7 +152,7 @@ const Contacts = () => {
               />
         </Box>
         <Box
-            gridColumn="span 3"
+            gridColumn="span 2"
             backgroundColor={colors.primary[400]}
             display="flex"
             alignItems="center"
@@ -166,9 +161,9 @@ const Contacts = () => {
             {/* 3rd */}
           <StatBox
                 title={total.deposit}
-                subtitle="입금내역"
-                progress="0.75"
-                increase="+14%"
+                subtitle="입금내역 (Deposit)"
+                progress="%"
+                increase=""
                 icon={
                   <AddIcon
                     sx={{ color: colors.greenAccent[600], fontSize: "20px" }}
@@ -177,7 +172,7 @@ const Contacts = () => {
               />
         </Box>
         <Box
-            gridColumn="span 3"
+            gridColumn="span 2"
             backgroundColor={colors.primary[400]}
             display="flex"
             alignItems="center"
@@ -185,9 +180,9 @@ const Contacts = () => {
           >
           <StatBox
                 title={total.withdrawal}
-                subtitle="출금내역"
-                progress="0.75"
-                increase="+14%"
+                subtitle="출금내역 (Withdrawal)"
+                progress="%"
+                increase=""
                 icon={
                   <RemoveIcon
                     sx={{ color: colors.greenAccent[600], fontSize: "20px" }}
