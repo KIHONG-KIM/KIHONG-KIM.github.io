@@ -147,14 +147,14 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
             <Item
-              title="Calendar"
+              title="가계부 달력"
               to="/calendar"
               icon={<CalendarTodayOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Invoices Balances"
+              title="카테고리별 지출 내역"
               to="/invoices"
               icon={<ReceiptOutlinedIcon />}
               selected={selected}
@@ -169,14 +169,14 @@ const Sidebar = () => {
               Pages
             </Typography>
             <Item
-              title="Profile Form"
+              title="등록"
               to="/form"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Manage Team"
+              title="회원 관리"
               to="/team"
               icon={<PeopleOutlinedIcon />}
               selected={selected}

@@ -13,7 +13,6 @@ import Pie from "./scenes/pie";
 import FAQ from "./scenes/faq";
 import Geography from "./scenes/geography";
 import FileUpload from "./scenes/upload";
-import DataCenter from "./scenes/dataCenter";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import Calendar from "./scenes/calendar/calendar";
@@ -43,7 +42,6 @@ function App() {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/geography" element={<Geography />} />
               <Route path="/upload" element={<FileUpload />} />
-              <Route path="/data" element={<DataCenter />} />
             </Routes>
           </main>
         </div>

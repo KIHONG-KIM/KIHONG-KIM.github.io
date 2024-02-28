@@ -2,54 +2,54 @@ import { useState, useEffect } from "react";
 import { Box, Button } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import { mockDataContacts } from "../../data/mockData";
 import Header from "../../components/Header";
 import { useTheme } from "@mui/material";
 import { columns } from "./../../data/columns";
 import Req from "../../config/axios";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs from 'dayjs';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import StatBox from "../../components/StatBox";
 
-
 const Contacts = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
   const [ val, setVal ] = useState([]);
   const [total, setTotal ] = useState({
     withdrawal: 0,
     deposit: 0
   })
 
-  const now = new Date();
-  const day = dayjs(now);
+  const day = dayjs(new Date());
   const [ datePicker, setDatePicker ] = useState(day);
   
   const getTransactions = async () => {
     try {
-      const getTransactions = await Req.get("/transaction")
+      await Req.get("/transaction")
       .then((result) => {
-        var copy = [...val];
-        copy = result.data;
-        setVal(copy);
+        handleSetVal(result.data);
       });
     } catch(err){
       console.log(err);
     }
+    
+  }
+
+  const handleSetVal = (value) => {
+    var copy = [...val];
+    copy = value;
+    setVal(copy)
   }
 
   const getTransactionsByDate = async (isDate) => {
     console.log(isDate, typeof(isDate))
       try {
-        const getTransactionsbyDate = await Req.get("/transactionsByDate", {params: {date: isDate}} )
+        await Req.get("/transactionsByDate", {params: {date: isDate}} )
         .then((result) => {
-          var copy = [...val];
-          copy = result.data;
-          setVal(copy);
+          handleSetVal(result.data);
         });
       } catch(err){
         console.log(err);
@@ -61,37 +61,41 @@ const Contacts = () => {
     console.log(val)
     console.log(datePicker, datePicker.get("month"));
   } 
-  
-  // 최초 데이터 조회
-  useEffect(() =>  {
-    getTransactions()
-  }, [])
 
-  // 월별 데이터 조회
-  useEffect(() =>  {
-    
-    if(datePicker) {
-      const isDate = datePicker.format("YYYY.MM");
-      console.log(datePicker.format("YYYY.MM"), "useEffect isDate")
-      getTransactionsByDate(isDate)
-    } else {
-      getTransactions()
-    }
-  }, [datePicker])
+  const handleSetTotal = () => {
 
-  // 총액 데이터 조회
-  useEffect(() => {
     var TotalDeposit = 0; 
     var TotalWithdrawal = 0;
-    const sum = val.map(function(sum,index) {
+    
+    val.map(function(sum) {
       TotalDeposit += sum.deposit;
       TotalWithdrawal += sum.withdrawal;
     });
+
     setTotal({
       deposit: TotalDeposit,
       withdrawal: TotalWithdrawal
     })
-    console.log(TotalDeposit, TotalWithdrawal)
+    console.log(val, TotalDeposit, TotalWithdrawal)
+  }
+  
+  // 최초 데이터 조회
+  // useEffect(() =>  {
+  //   getTransactions()
+  //   handleSetTotal()
+  //   // handleSetTotal()
+  // }, [])
+
+  // 월별 데이터 조회
+  useEffect(() =>  {
+    const isDate = datePicker.format("YYYY.MM");
+    console.log(datePicker.format("YYYY.MM"), "useEffect isDate")
+    getTransactionsByDate(isDate)
+  }, [datePicker])
+
+  // 총액 데이터 조회
+  useEffect(() => {
+    handleSetTotal()
   }, [val])
 
   function generateRandom() {
@@ -133,7 +137,7 @@ const Contacts = () => {
         </Box>
         {/* 2nd */}
         <Box
-            gridColumn="span 2"
+            gridColumn="span 3"
             backgroundColor={colors.primary[400]}
             display="flex"
             alignItems="center"
@@ -152,7 +156,7 @@ const Contacts = () => {
               />
         </Box>
         <Box
-            gridColumn="span 2"
+            gridColumn="span 3"
             backgroundColor={colors.primary[400]}
             display="flex"
             alignItems="center"
@@ -172,7 +176,7 @@ const Contacts = () => {
               />
         </Box>
         <Box
-            gridColumn="span 2"
+            gridColumn="span 3"
             backgroundColor={colors.primary[400]}
             display="flex"
             alignItems="center"

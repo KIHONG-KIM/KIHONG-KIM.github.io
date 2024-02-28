@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import FullCalendar, { formatDate } from "@fullcalendar/react";
-import calendarApi from "@fullcalendar/core"
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -26,7 +25,8 @@ const Calendar = () => {
   const colors = tokens(theme.palette.mode);
 
   const [val,setVal] = useState([])
-  // const reactRef = useRef(new FullCalendar);
+  const [newEvent,setNewEvent] = useState([])
+  const calendarRef = useRef()
   const [currentEvents, setCurrentEvents] = useState([
     {
       id: "12315",
@@ -40,70 +40,80 @@ const Calendar = () => {
     },
   ]);
 
-    function generateRandom() {
-    var length = 8,
-    charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-    retVal = "";
-    for (var i = 0, n = charset.length; i < length; ++i) {
-      retVal += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return retVal;
-  }
-
-  const handleGetTransactions = async (isDate) => {
+  const handleGetTransactions = async () => {
     console.log("요청완료")
 
-    var copy;
+    var copy = [...val];;
     var value = null;
     try {
-      const getTransactionsbyDate = await Req.get("/transactionsByDate", {params: {date: isDate}} )
+      await Req.get("/transaction")
       .then((result) => {
-        var copy = [...val];
         copy = result.data;
-        setVal(copy);
       });
 
     } catch(err){
       console.log(err);
     } // try catch
+
+    setVal(copy);
+
   };
 
   const handleConfirm = () => {
-    console.log(val, currentEvents)
-    const today = new Date();
-    const nowMonth = dayjs(today).format('YYYY-MM');
-    handleGetTransactions(nowMonth)
+    // reactRef.view.addEvent(currentEvents)
+    console.log("--------------------------------------------------")
+    console.log(val, 'val')
+    console.log(currentEvents, 'currentEvents')
+    console.log(newEvent, 'newEvents')
+    console.log(calendarRef, 'calendarRef')
+
+    var copy_new = [...newEvent];
+    copy_new = calendarRef.current
+    setNewEvent(copy_new);
   }
 
+  const handleAddEvent = () => {
+    var copy = [...newEvent];
+    copy = currentEvents;
+    var copy_new = [...newEvent];
+    copy_new = calendarRef.current
+    setNewEvent(copy_new);
+  } 
+
+  
+
   // 처음 로딩시 서버 데이터 Read
-  // useEffect(() =>  {
-  // }, [])
+  useEffect(() =>  {
+    handleGetTransactions()
+  }, [])
 
 
   useEffect(() =>  {
-    const preProcess = val.map(function(element, index, array) {
-      console.log()
-      return {
-        id: generateRandom(),
-        start: dayjs(element.date).format('YYYY-MM-DD'),
-        title: element.person,
-        // deposit: element.deposit,
-        // withdrawal: element.withdrawal
-      };
-    });
+    console.log('val이 바뀌었어요!')
 
-    // console.log(preProcess, value,  "pre, copy")
-    var copy = [...currentEvents]
-    copy = preProcess
-    setCurrentEvents(copy);
+    var preProcess;
+    const process = () => {
+        try {
+          preProcess = val.map(function(element) {
+            return {
+              id: element._id,
+              start: dayjs(element.date).format('YYYY-MM-DD'),
+              title: element.person,
+            };
+          });
+          console.log(val, currentEvents, 'val, currentEvents');
+        } catch (err) {
+          console.log(err)
+        } 
+        calendarRef.current = preProcess;
+
+        handleAddEvent()
+      }
+
+    process();
 
   }, [val])
 
-  const handleAddEvent = (reactRef) => {
-    // reactRef.view.addEvent(currentEvents)
-    console.log(val)
-    console.log(currentEvents)
-  } 
 
   // 클릭시 프롬프트 생성, 타이틀 입력하고 이벤트 생성
   const handleDateClick = (selected) => {
@@ -137,7 +147,8 @@ const Calendar = () => {
   return (
     <Box m="20px">
       <Header title="Calendar" subtitle="Full Calendar Interactive Page" />
-      <Button color="secondary" variant="contained" onClick={handleAddEvent}>로그 확인</Button>
+      <Button color="secondary" variant="contained" onClick={handleConfirm}>로그 확인</Button>
+      <Button color="secondary" variant="contained" onClick={handleAddEvent}>이벤트 생성</Button>
       <Box display="flex" justifyContent="space-between">
         {/* CALENDAR SIDEBAR */}
         <Box
@@ -145,9 +156,16 @@ const Calendar = () => {
           backgroundColor={colors.primary[400]}
           p="15px"
           borderRadius="4px"
+          sx={{
+            height: 742,
+            overflow: "hidden",
+            overflowY: "scroll",
+          }}
         >
           {/* 등록되어 있는 이벤트 뿌리기 */}
-          <Typography variant="h5">Events</Typography>
+          <Typography variant="h5" 
+            sx={{ position: "fixed" }}>Events
+          </Typography>
           <List>
             {currentEvents.map((event) => (
               <ListItem
@@ -199,8 +217,7 @@ const Calendar = () => {
             eventClick={handleEventClick}
             eventsSet={(events) => setCurrentEvents(events)}
             initialEvents={currentEvents} // 추가해줘야함
-            // events={currentEvents}
-            // ref={reactRef}
+            events={newEvent}
           />
         </Box>
       </Box>

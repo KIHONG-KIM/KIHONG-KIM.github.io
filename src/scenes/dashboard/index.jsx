@@ -56,7 +56,7 @@ const Dashboard = () => {
         >
           <StatBox
             title="12,361"
-            subtitle="Emails Sent"
+            subtitle="Date Picker"
             progress="0.75"
             increase="+14%"
             icon={
@@ -75,7 +75,7 @@ const Dashboard = () => {
         >
           <StatBox
             title="431,225"
-            subtitle="Sales Obtained"
+            subtitle="수입"
             progress="0.50"
             increase="+21%"
             icon={
@@ -94,7 +94,7 @@ const Dashboard = () => {
         >
           <StatBox
             title="32,441"
-            subtitle="New Clients"
+            subtitle="지출"
             progress="0.30"
             increase="+5%"
             icon={
@@ -113,7 +113,7 @@ const Dashboard = () => {
         >
           <StatBox
             title="1,325,134"
-            subtitle="Traffic Received"
+            subtitle="저축"
             progress="0.80"
             increase="+43%"
             icon={
@@ -143,7 +143,7 @@ const Dashboard = () => {
                 fontWeight="600"
                 color={colors.grey[100]}
               >
-                Revenue Generated
+                월 평균 지출 금액
               </Typography>
               <Typography
                 variant="h3"
@@ -181,7 +181,7 @@ const Dashboard = () => {
             p="15px"
           >
             <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
-              Recent Transactions
+              최근 지출
             </Typography>
           </Box>
           {mockTransactions.map((transaction, i) => (
