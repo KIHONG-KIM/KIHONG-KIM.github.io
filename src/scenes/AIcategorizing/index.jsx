@@ -1,10 +1,11 @@
+import OpenAI from 'openai';
 import { useState, useEffect } from "react";
 import { Box, Button } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
 import { useTheme } from "@mui/material";
-import { columns } from "./../../data/columns";
+import { columns } from "../../data/columns";
 import Req from "../../config/axios";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -12,8 +13,18 @@ import dayjs from 'dayjs';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import StatBox from "../../components/StatBox";
+import costKeyword from "../../data/data"
 
-const Contacts = () => {
+// import dotenv from "dotenv";
+// dotenv.config();
+// const API_KEY = process.env.REACT_APP_OPENAI_API_KEY
+// console.log(API_KEY)
+
+// const openai = new OpenAI({
+//   // apiKey: process.env.REACT_APP_OPENAI_API_KEY
+// })
+
+const AIcategorizing = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -25,18 +36,6 @@ const Contacts = () => {
 
   const day = dayjs(new Date());
   const [ datePicker, setDatePicker ] = useState(day);
-  
-  const getTransactions = async () => {
-    try {
-      await Req.get("/transaction")
-      .then((result) => {
-        handleSetVal(result.data);
-      });
-    } catch(err){
-      console.log(err);
-    }
-    
-  }
 
   const handleSetVal = (value) => {
     var copy = [...val];
@@ -45,7 +44,6 @@ const Contacts = () => {
   }
 
   const getTransactionsByDate = async (isDate) => {
-    console.log(isDate, typeof(isDate))
       try {
         await Req.get("/transactionsByDate", {params: {date: isDate}} )
         .then((result) => {
@@ -56,14 +54,86 @@ const Contacts = () => {
       }
   } 
 
-  // 테스트용 버튼
-  const handleConfirm = () => {
-    console.log(val)
-    console.log(datePicker, datePicker.get("month"));
+  const postTransactionUpadate = async (categories) => {
+    try {
+      await Req.post("/transactionUpdate", categories )
+      .then((result) => {
+        console.log(result.data)
+      });
+    } catch(err){
+      console.log(err);
+    }
   } 
 
-  const handleSetTotal = () => {
+  const getKeywords = async () => {
+    try {
+      await Req.get("/keyword")
+      .then((result) => {
+        console.log(result.data)
+      });
+    } catch(err){
+      console.log(err);
+    }
+  } 
 
+  const postKeywords = async (categories) => {
+    try {
+      await Req.post("/keyword", categories )
+      .then((result) => {
+        console.log(result.data)
+      });
+    } catch(err){
+      console.log(err);
+    }
+  } 
+
+  // 기능 제작하기 -->>
+  // 테스트용 버튼
+  const handleConfirm = () => {
+
+    console.log(val)
+    const categories = val
+    .filter(function(element){
+      return (element.category === "미분류"); 
+    })
+    .map(( element ) => {
+      if(element.category === "미분류") {
+        return{
+          title: element.title,
+          category: element.category
+        } 
+      }
+      })
+    console.log(categories)
+
+  }
+
+
+  // Categorizing 할 수 있는 기능
+
+  // Categorizing 할 수 있는 기능
+  const handleGetKeywords = async () => {
+    getKeywords();
+  }
+
+  const handlePostKeywords = async () => {
+    console.log(costKeyword)
+    postKeywords(costKeyword);
+  }
+
+    // Categorizing 할 수 있는 기능
+    const getAsk = async () => {
+      try {
+        await Req.get("/gptAsk")
+        .then((result) => {
+          console.log(result.data)
+        });
+      } catch(err){
+        console.log(err);
+      }
+    }
+
+  const handleSetTotal = () => {
     var TotalDeposit = 0; 
     var TotalWithdrawal = 0;
     
@@ -76,20 +146,11 @@ const Contacts = () => {
       deposit: TotalDeposit,
       withdrawal: TotalWithdrawal
     })
-    console.log(val, TotalDeposit, TotalWithdrawal)
   }
-  
-  // 최초 데이터 조회
-  // useEffect(() =>  {
-  //   getTransactions()
-  //   handleSetTotal()
-  //   // handleSetTotal()
-  // }, [])
 
   // 월별 데이터 조회
   useEffect(() =>  {
     const isDate = datePicker.format("YYYY.MM");
-    console.log(datePicker.format("YYYY.MM"), "useEffect isDate")
     getTransactionsByDate(isDate)
   }, [datePicker])
 
@@ -109,7 +170,7 @@ const Contacts = () => {
   }
 
   return (
-    <Box m="20px">
+    <Box m="0px 20px">
       <Header
         title="거래내역"
         subtitle="List of Transactions"
@@ -195,10 +256,20 @@ const Contacts = () => {
               />
         </Box>
       </Box>
-      {/* <Button color="secondary" variant="contained" onClick={handleConfirm}>
-        확인</Button>
-      <Button color="secondary" variant="contained" onClick={getTransactions}>
-      DB가져오기</Button> */}
+      <Button color="secondary" variant="contained" onClick={handleConfirm}>
+        현재 데이터 확인</Button>
+      <> </>
+      <Button color="secondary" variant="contained" onClick={getAsk}>
+      getAsk</Button>
+      <> </>
+      <Button color="secondary" variant="contained" onClick={handleGetKeywords}>
+      Read Keyword console.log</Button>
+      <> </>
+      <Button color="secondary" variant="contained" onClick={handlePostKeywords}>
+      postKeywords Create</Button>
+      <> </>
+      <Button color="secondary" variant="contained" onClick={handlePostKeywords}>
+      읽기</Button>
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -242,4 +313,4 @@ const Contacts = () => {
   );
 };
 
-export default Contacts;
+export default AIcategorizing;

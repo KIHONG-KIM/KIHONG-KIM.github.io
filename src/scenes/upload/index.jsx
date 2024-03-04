@@ -51,6 +51,32 @@ const DataCenter = () => {
       
     }
 
+  //// 카테고리 분별 시스템
+  function categorizeExpense(item) {
+
+    const categories = {
+        식비 : ['정육점', '피자', '식당', '카페', '아이스크림', '공차', '마트', '세븐일레븐'],
+        생활비 : ['영화', '공연', '축구', '옷', '신발', '가방', '병원', '약국', '학원', '교재' ],
+        교통비 : ['택시', '버스', '전철', '주유소', 'HIPASS', ],
+        고정지출 : ['인터넷', '휴대폰', 'SKT', 'KT', 'LGT', '전세', '월세', '아파트', '빌라', '원룸', '가스', '전기', '수도']
+    }
+
+    let category;
+
+    for (const key in categories) {
+        if (categories[key].some(word => item.includes(word))) {
+            category = key;
+            break;
+        }
+    }
+
+    if (category === undefined) {
+        category = '미분류'
+    }
+
+    return category;
+}
+
     const handleDataParsing = (e) => {
 
       var files = e.target.files, f = files[0];
@@ -85,15 +111,16 @@ const DataCenter = () => {
         var newData = [...val];
         newData = dataParse.map(function(element, index) {
           return {
-            date: element[0],
-            summary: element[1],
-            person: element[2],
-            memo: element[3],
+            date: element[0].trim(),
+            summary: element[1].trim(),
+            title: element[2].trim(),
+            memo: element[3].trim(),
             withdrawal: element[4],
             deposit: element[5],
             balance: element[6],
-            place: element[7],
-            etc:element[8]
+            place: element[7].trim(),
+            etc:element[8].trim(),
+            category: categorizeExpense(element[2].trim())
           };
         });
 
