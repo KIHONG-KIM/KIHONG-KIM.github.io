@@ -98,7 +98,7 @@ const Calendar = () => {
             return {
               id: element._id,
               start: dayjs(element.date).format('YYYY-MM-DD'),
-              title: element.person,
+              title: element.title,
             };
           });
           console.log(val, currentEvents, 'val, currentEvents');

@@ -30,6 +30,7 @@
     "dayjs": "^1.11.10",
     "dotenv": "^16.4.5",
     "formik": "^2.2.9",
+    "openai": "^4.28.4",
     "react": "^18.2.0",
     "react-chartjs-2": "^4.3.1",
     "react-dom": "^18.2.0",

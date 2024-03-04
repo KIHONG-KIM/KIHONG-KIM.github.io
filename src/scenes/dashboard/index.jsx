@@ -21,7 +21,7 @@ const Dashboard = () => {
     <Box m="20px">
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
+        <Header title="지갑 비서" subtitle="지갑비서에 오신 것을 환영합니다" />
 
         <Box>
           <Button

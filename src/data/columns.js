@@ -9,9 +9,14 @@ export const columns = [
     headerName: "적요",
   },
   {
-    field: "person",
+    field: "title",
     headerName: "보낸분/받는분",
     flex: 0.7
+  },
+  {
+    field: "category",
+    headerName: "카테고리",
+    flex: 0.5
   },
   {
       field: "etc",
