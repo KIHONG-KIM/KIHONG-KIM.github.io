@@ -184,6 +184,13 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
             <Item
+              title="데이터 관리"
+              to="/data"
+              icon={<PeopleOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
               title="FAQ Page"
               to="/faq"
               icon={<HelpOutlineOutlinedIcon />}

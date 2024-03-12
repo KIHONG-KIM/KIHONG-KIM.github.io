@@ -1,39 +1,24 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Box, Button } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
 import { useTheme } from "@mui/material";
 import * as XLSX from 'xlsx';
-import { mockDataContacts } from "../../data/mockData";
 import { columns } from "../../data/columns";
 import Req from "../../config/axios";
 
-const DataCenter = () => {
-
-    let column = [
-      {
-        id: 1,
-        date: 3,
-        summary: "John Smith",
-        person: "jonsmith@gmail.com",
-        memo: '35234',
-        withdrawal: 10000,
-        deposit: 10000,
-        balance: 10000,
-        place: "10001",
-        etc: '123512',
-      }
-    ]
+const Upload = () => {
 
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [ val, setVal ] = useState([]);
+    const keyword = useRef();
 
     const handleConfirm = (e) => {
-      console.log("val:", val)
-      console.log("column", column)
-      console.log("mockDataContacts", mockDataContacts)
+
+      handleGeKeyword()
+
     }
 
     const handleDBCreate = async (e) => {
@@ -46,6 +31,52 @@ const DataCenter = () => {
           console.log(err);
         }
     };
+    
+    var arr=[];
+
+    const handleGeKeyword = async () => {
+
+      try {
+        await Req.get("/keyword")
+        .then((result) => {
+          keyword.current = result.data;
+          console.log(keyword.current)
+
+        });
+      } catch(err){
+        console.log(err);
+      }
+
+      arr.식비 = [];
+      arr.생활비 = [];
+      arr.교통비 = [];
+      arr.고정지출 = [];
+      arr.미분류 = [];
+
+      keyword.current.map( (element) => {
+        
+        switch(element.category) {
+          case '식비': 
+            arr.식비.push(element.word);
+            break;
+          case '생활비': 
+            arr.생활비.push(element.word);
+            break;
+          case '교통비':
+            arr.교통비.push(element.word);
+            break;
+          case "고정지출": 
+            arr.고정지출.push(element.word);
+          break;
+          default:
+            arr.미분류.push(element.word);
+          break;         
+        }
+        return null;
+      })
+      
+      console.log(arr)
+    }
 
     const handleReset = () => {
       
@@ -54,17 +85,10 @@ const DataCenter = () => {
   //// 카테고리 분별 시스템
   function categorizeExpense(item) {
 
-    const categories = {
-        식비 : ['정육점', '피자', '식당', '카페', '아이스크림', '공차', '마트', '세븐일레븐'],
-        생활비 : ['영화', '공연', '축구', '옷', '신발', '가방', '병원', '약국', '학원', '교재' ],
-        교통비 : ['택시', '버스', '전철', '주유소', 'HIPASS', ],
-        고정지출 : ['인터넷', '휴대폰', 'SKT', 'KT', 'LGT', '전세', '월세', '아파트', '빌라', '원룸', '가스', '전기', '수도']
-    }
-
     let category;
 
-    for (const key in categories) {
-        if (categories[key].some(word => item.includes(word))) {
+    for (const key in arr) {
+        if (arr[key].some(word => item.includes(word))) {
             category = key;
             break;
         }
@@ -95,7 +119,6 @@ const DataCenter = () => {
         dataParse.shift()
         dataParse.shift()
         dataParse.pop()
-
         
         try { 
         // summary: { type:String },    
@@ -197,4 +220,4 @@ const DataCenter = () => {
     );
   };
 
-export default DataCenter;
+export default Upload;

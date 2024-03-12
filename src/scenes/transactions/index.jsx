@@ -45,7 +45,7 @@ const Contacts = () => {
   }
 
   const getTransactionsByDate = async (isDate) => {
-    console.log(isDate, typeof(isDate))
+
       try {
         await Req.get("/transactionsByDate", {params: {date: isDate}} )
         .then((result) => {
@@ -58,8 +58,7 @@ const Contacts = () => {
 
   // 테스트용 버튼
   const handleConfirm = () => {
-    console.log(val)
-    console.log(datePicker, datePicker.get("month"));
+
   } 
 
   const handleSetTotal = () => {
@@ -76,15 +75,7 @@ const Contacts = () => {
       deposit: TotalDeposit,
       withdrawal: TotalWithdrawal
     })
-    console.log(val, TotalDeposit, TotalWithdrawal)
   }
-  
-  // 최초 데이터 조회
-  // useEffect(() =>  {
-  //   getTransactions()
-  //   handleSetTotal()
-  //   // handleSetTotal()
-  // }, [])
 
   // 월별 데이터 조회
   useEffect(() =>  {

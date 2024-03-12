@@ -41,7 +41,6 @@ const Calendar = () => {
   ]);
 
   const handleGetTransactions = async () => {
-    console.log("요청완료")
 
     var copy = [...val];;
     var value = null;
@@ -61,12 +60,6 @@ const Calendar = () => {
 
   const handleConfirm = () => {
     // reactRef.view.addEvent(currentEvents)
-    console.log("--------------------------------------------------")
-    console.log(val, 'val')
-    console.log(currentEvents, 'currentEvents')
-    console.log(newEvent, 'newEvents')
-    console.log(calendarRef, 'calendarRef')
-
     var copy_new = [...newEvent];
     copy_new = calendarRef.current
     setNewEvent(copy_new);
@@ -89,10 +82,10 @@ const Calendar = () => {
 
 
   useEffect(() =>  {
-    console.log('val이 바뀌었어요!')
 
     var preProcess;
     const process = () => {
+
         try {
           preProcess = val.map(function(element) {
             return {
@@ -101,7 +94,7 @@ const Calendar = () => {
               title: element.title,
             };
           });
-          console.log(val, currentEvents, 'val, currentEvents');
+
         } catch (err) {
           console.log(err)
         } 
