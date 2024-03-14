@@ -27,18 +27,7 @@ const Calendar = () => {
   const [val,setVal] = useState([])
   const [newEvent,setNewEvent] = useState([])
   const calendarRef = useRef()
-  const [currentEvents, setCurrentEvents] = useState([
-    {
-      id: "12315",
-      title: "All-day event",
-      date: "2024-02-14",
-    },
-    {
-      id: "5123",
-      title: "Timed event",
-      date: "2024-02-28",
-    },
-  ]);
+  const [currentEvents, setCurrentEvents] = useState([{}]);
 
   const handleGetTransactions = async () => {
 

@@ -76,101 +76,6 @@ export const mockDataTeam = [
   },
 ];
 
-// 2 연락처 정보
-export const mockDataContacts = [
-  // {
-  //   _id: "3",
-  //   date: 5,
-  //   summary: "John Smith",
-  //   person: "jonsmith@gmail.com",
-  //   memo: '35234',
-  //   withdrawal: 10000,
-  //   deposit: 10000,
-  //   balance: 10000,
-  //   place: "10001",
-  //   etc: '123512',
-  // },
-  // {
-  //   _id: "4",
-  //   date: 6,
-  //   summary: "Cersei William",
-  //   person: "williamc@gmail.com",
-  //   memo: '42345',
-  //   withdrawal: 20000,
-  //   deposit: 20000,
-  //   balance: 20000,
-  //   place: "13151",
-  //   etc: '123512'
-  // }
-];
-
-// 3 인보이스
-export const mockDataInvoices = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "jonsmith@gmail.com",
-    cost: "21.24",
-    phone: "(665)121-5454",
-    date: "03/12/2022",
-  },
-  {
-    id: 2,
-    name: "Cersei William",
-    email: "williamc@gmail.com",
-    cost: "1.24",
-    phone: "(421)314-2288",
-    date: "06/15/2021",
-  },
-  {
-    id: 3,
-    name: "Jaimes Watson",
-    email: "jameswatt@gmail.com",
-    cost: "11.24",
-    phone: "(422)982-6739",
-    date: "05/02/2022",
-  },
-  {
-    id: 4,
-    name: "Aisha Patel",
-    email: "aisha23@newwill.com",
-    cost: "80.55",
-    phone: "(921)425-6742",
-    date: "03/21/2022",
-  },
-  {
-    id: 5,
-    name: "Witson Cortex",
-    email: "witson@gmail.com",
-    cost: "1.24",
-    phone: "(421)445-1189",
-    date: "01/12/2021",
-  },
-  {
-    id: 6,
-    name: "Simon Fox",
-    email: "simon@gmail.com",
-    cost: "63.12",
-    phone: "(232)545-6483",
-    date: "11/02/2022",
-  },
-  {
-    id: 7,
-    name: "Ferrara Clifford",
-    email: "ferraraclifford@gmail.com",
-    cost: "52.42",
-    phone: "(543)124-0123",
-    date: "02/11/2022",
-  },
-  {
-    id: 8,
-    name: "Rossini Frances",
-    email: "rossinifrances@gmail.com",
-    cost: "21.24",
-    phone: "(222)444-5555",
-    date: "05/02/2021",
-  },
-];
 
 // 결제 금액 (Dash Board)
 export const mockTransactions = [
@@ -224,10 +129,44 @@ export const mockTransactions = [
   },
 ];
 
+// pie 데이타
+export const mockPieData = [
+  {
+    id: "hack",
+    label: "hack",
+    value: 239,
+    color: "hsl(104, 70%, 50%)",
+  },
+  {
+    id: "make",
+    label: "make",
+    value: 170,
+    color: "hsl(162, 70%, 50%)",
+  },
+  {
+    id: "go",
+    label: "go",
+    value: 322,
+    color: "hsl(291, 70%, 50%)",
+  },
+  {
+    id: "lisp",
+    label: "lisp",
+    value: 503,
+    color: "hsl(229, 70%, 50%)",
+  },
+  {
+    id: "scala",
+    label: "scala",
+    value: 584,
+    color: "hsl(344, 70%, 50%)",
+  },
+];
+
 // bar 바차트
 export const mockBarData = [
   {
-    country: "AD",
+    country: "1월",
     "hot dog": 137,
     "hot dogColor": "hsl(229, 70%, 50%)",
     burger: 96,
@@ -238,7 +177,7 @@ export const mockBarData = [
     donutColor: "hsl(340, 70%, 50%)",
   },
   {
-    country: "AE",
+    country: "2월",
     "hot dog": 55,
     "hot dogColor": "hsl(307, 70%, 50%)",
     burger: 28,
@@ -249,7 +188,7 @@ export const mockBarData = [
     donutColor: "hsl(275, 70%, 50%)",
   },
   {
-    country: "AF",
+    country: "3월",
     "hot dog": 109,
     "hot dogColor": "hsl(72, 70%, 50%)",
     burger: 23,
@@ -305,39 +244,26 @@ export const mockBarData = [
   },
 ];
 
-// pie 데이타
-export const mockPieData = [
-  {
-    id: "hack",
-    label: "hack",
-    value: 239,
-    color: "hsl(104, 70%, 50%)",
-  },
-  {
-    id: "make",
-    label: "make",
-    value: 170,
-    color: "hsl(162, 70%, 50%)",
-  },
-  {
-    id: "go",
-    label: "go",
-    value: 322,
-    color: "hsl(291, 70%, 50%)",
-  },
-  {
-    id: "lisp",
-    label: "lisp",
-    value: 503,
-    color: "hsl(229, 70%, 50%)",
-  },
-  {
-    id: "scala",
-    label: "scala",
-    value: 584,
-    color: "hsl(344, 70%, 50%)",
-  },
-];
+export const colorArr = [
+  { "color": "hsl(307, 70%, 50%)" },
+  { "color": "hsl(43, 70%, 50%)" },
+  { "color": "hsl(279, 70%, 50%)" },
+  { "color": "hsl(125, 70%, 50%)" },
+  { "color": "hsl(18, 70%, 50%)" },
+  { "color": "hsl(200, 70%, 50%)" },
+  { "color": "hsl(195, 70%, 50%)" },
+  { "color": "hsl(27, 70%, 50%)" },
+  { "color": "hsl(181, 70%, 50%)" },
+  { "color": "hsl(185, 70%, 50%)" },
+  { "color": "hsl(357, 70%, 50%)" },
+  { "color": "hsl(307, 70%, 50%)" },
+  { "color": "hsl(213, 70%, 50%)" },
+  { "color": "hsl(343, 70%, 50%)" },
+  { "color": "hsl(128, 70%, 50%)" },
+  { "color": "hsl(181, 70%, 50%)" },
+  { "color": "hsl(233, 70%, 50%)" },
+  { "color": "hsl(70, 70%, 50%)" }
+]
 
 // 라인데이타
 export const mockLineData = [

@@ -1,15 +1,32 @@
 import { useTheme } from "@mui/material";
 import { ResponsiveBar } from "@nivo/bar";
 import { tokens } from "../theme";
-import { mockBarData as data } from "../data/mockData";
+import tooltip from "@mui/material";
 
-const BarChart = ({ isDashboard = false }) => {
+const BarChart = ({ data }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
   return (
     <ResponsiveBar
       data={data}
+      tooltip={({ datum }) => (
+        <div style={{ background: "black", color: "white", padding: "5px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                width: "20px",
+                height: "20px",
+                background: datum.color,
+                marginRight: "10px",
+              }}
+            ></div>
+            <strong>{datum.id}</strong>{" "}
+            {datum.data.etc ? <p>({datum.data.etc.length})</p> : null} :{" "}
+            <p>{datum.value.toLocaleString() + "원"}</p>
+          </div>
+        </div>
+      )}
       theme={{
         // added
         axis: {
@@ -76,7 +93,7 @@ const BarChart = ({ isDashboard = false }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "country", // changed
+        legend: "country",
         legendPosition: "middle",
         legendOffset: 32,
       }}
@@ -84,7 +101,7 @@ const BarChart = ({ isDashboard = false }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "food", // changed
+        legend: "food",
         legendPosition: "middle",
         legendOffset: -40,
       }}

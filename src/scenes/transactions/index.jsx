@@ -1,54 +1,65 @@
 import { useState, useEffect } from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography, useTheme } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { tokens } from "../../theme";
-import Header from "../../components/Header";
-import { useTheme } from "@mui/material";
-import { columns } from "../../data/columns";
-import Req from "../../config/axios";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import Header from "../../components/Header";
+import StatBox from "../../components/StatBox";
+import { tokens } from "../../theme";
+import { columns } from "../../data/columns";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import StatBox from "../../components/StatBox";
+import dayjs from 'dayjs';
+import Req from "../../config/axios";
+import ResponsivePieCanvas from "../../components/newpie";
+import { colorArr } from '../../data/mockData';
 
-const Contacts = () => {
+const Transactions = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
   const [ val, setVal ] = useState([]);
-  const [total, setTotal ] = useState({
+  const [ data,setData ] = useState([])
+  const [ total, setTotal ] = useState({
     withdrawal: 0,
     deposit: 0
+  })
+  const [ date,setDate ] = useState({
+    start:"",
+    last:""
   })
 
   const day = dayjs(new Date());
   const [ datePicker, setDatePicker ] = useState(day);
-  
-  const getTransactions = async () => {
-    try {
-      await Req.get("/transaction")
-      .then((result) => {
-        handleSetVal(result.data);
-      });
-    } catch(err){
-      console.log(err);
-    }
-    
-  }
 
+    // 날짜 선택시, 월별 데이터 조회 function 호출
+    useEffect(() =>  {
+      const isDate = datePicker.format("YYYY.MM");
+      console.log(datePicker.format("YYYY.MM"), "useEffect isDate")
+      getTransactionsByDate(isDate)
+      AgrByDate(isDate)
+    }, [datePicker])
+  
+    // 총액 데이터 조회
+    useEffect(() => {
+      handleSetTotal()
+    }, [val])
+
+  // 거래 조회 데이터 setState에 저장
   const handleSetVal = (value) => {
     var copy = [...val];
     copy = value;
     setVal(copy)
   }
 
+  // 월별 DB 조회 function
   const getTransactionsByDate = async (isDate) => {
 
       try {
         await Req.get("/transactionsByDate", {params: {date: isDate}} )
         .then((result) => {
+          var copy = [];
+          copy = result.data[0];
           handleSetVal(result.data);
         });
       } catch(err){
@@ -56,11 +67,21 @@ const Contacts = () => {
       }
   } 
 
-  // 테스트용 버튼
-  const handleConfirm = () => {
+  // 월별 DB 조회 function
+const AgrByDate = async (isDate) => {
+  try {
+      const result = await Req.get("/aggrByDate", {params: {date: isDate}} )
 
-  } 
+      console.log(result.data[0]);
+      refine (result.data[0].category)
+      handleSetDate(result.data[0].date)
 
+  } catch(err){
+      console.log(err);
+  }
+} 
+
+  // 총액 계산
   const handleSetTotal = () => {
 
     var TotalDeposit = 0; 
@@ -77,40 +98,54 @@ const Contacts = () => {
     })
   }
 
-  // 월별 데이터 조회
-  useEffect(() =>  {
-    const isDate = datePicker.format("YYYY.MM");
-    console.log(datePicker.format("YYYY.MM"), "useEffect isDate")
-    getTransactionsByDate(isDate)
-  }, [datePicker])
+  function refine (data) {
+    var dataSet;
+    dataSet = data.map( (el, index) => {
+        return {
+            id: el._id,
+            label: el._id,
+            value: el.Total,
+            color: colorArr[index],
+            etc: el.arr
+        }
+    })
 
-  // 총액 데이터 조회
-  useEffect(() => {
-    handleSetTotal()
-  }, [val])
+    setData(dataSet)
+}
 
-  function generateRandom() {
-    var length = 8,
-    charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-    retVal = "";
-    for (var i = 0, n = charset.length; i < length; ++i) {
-      retVal += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return retVal;
+  // 날짜 setDate 및 rendering 
+  const handleSetDate = (date) => {
+
+    var copy;
+    console.log(date, "date")
+    copy = {
+      start: date[0].start,
+      last: date[0].last 
+    };
+
+    setDate(copy)
+        console.log(val, "date")
   }
 
+
+
   return (
-    <Box m="20px">
+    <Box m="15px">
+      <Typography>{date.start?dayjs(date.start).format('YYYY.MM.DD'):""}
+      -{date.last?dayjs(date.last).format('YYYY.MM.DD'):""}</Typography>
       <Header
         title="거래내역"
         subtitle="List of Transactions"
       />
+      
       <Box
         display="grid"
         gridTemplateColumns="repeat(12, 1fr)"
         gridAutoRows="90px"
         gap="20px"
-      >
+        marginTop={-5}
+        marginBottom={-6}
+        >
         {/* 1st */}
         <Box
             gridColumn="span 3"
@@ -120,10 +155,12 @@ const Contacts = () => {
             justifyContent="center">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker 
-              value={datePicker} 
-              onChange={(newValue) => 
-                setDatePicker(newValue) } 
-              views={['year', 'month']}/>
+                value={datePicker} 
+                onChange={(newValue) => 
+                  setDatePicker(newValue) } 
+                views={['year', 'month']}
+                openTo={'month'}
+              />
             </LocalizationProvider>
         </Box>
         {/* 2nd */}
@@ -221,16 +258,19 @@ const Contacts = () => {
             color: `${colors.grey[100]} !important`,
           },
         }}
-      >
-        <DataGrid
-          rows={val}
-          columns={columns}
-          components={{ Toolbar: GridToolbar }}
-          getRowId={ (row) => generateRandom() }
-        />
+      > 
+      <Box style={{ width: '50%', height: '50%' }}>
+        <ResponsivePieCanvas data={data} />
       </Box>
+      <DataGrid
+        rows={val}
+        columns={columns}
+        components={{ Toolbar: GridToolbar }}
+        getRowId={ (row) => row._id }
+      />
     </Box>
+  </Box>
   );
 };
 
-export default Contacts;
+export default Transactions;

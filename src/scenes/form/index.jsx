@@ -17,12 +17,11 @@ const Form = () => {
         } catch(err){
           console.log(err);
         }
-    };
+  };
 
   return (
     <Box m="20px">
       <Header title="CREATE USER" subtitle="Create a New User Profile" />
-
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
@@ -58,19 +57,6 @@ const Form = () => {
                 helperText={touched.name && errors.name}
                 sx={{ gridColumn: "span 4" }}
               />
-              {/* <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Last Name"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.lastName}
-                name="lastName"
-                error={!!touched.lastName && !!errors.lastName}
-                helperText={touched.lastName && errors.lastName}
-                sx={{ gridColumn: "span 2" }}
-              /> */}
               <TextField
                 fullWidth
                 variant="filled"
@@ -110,19 +96,6 @@ const Form = () => {
                 helperText={touched.address && errors.address}
                 sx={{ gridColumn: "span 4" }}
               />
-              {/* <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Address 2"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.address2}
-                name="address2"
-                error={!!touched.address2 && !!errors.address2}
-                helperText={touched.address2 && errors.address2}
-                sx={{ gridColumn: "span 4" }}
-              /> */}
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">

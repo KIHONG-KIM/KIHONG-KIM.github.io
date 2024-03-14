@@ -1,0 +1,140 @@
+/* * * * * Transactions Function
+ * Transactions
+ */
+
+  // 전체 데이터 조회 function
+  const getTransactions = async () => {
+    try {
+      await Req.get("/transaction")
+      .then((result) => {
+        handleSetVal(result.data);
+      });
+    } catch(err){
+      console.log(err);
+    }
+  }
+
+  
+  // 월별 DB 조회 function *중복*
+//   const getTransactionsByDate = async (isDate) => {
+
+//     try {
+//       await Req.get("/transactionsByDate", {params: {date: isDate}} )
+//       .then((result) => {
+//         handleSetVal(result.data);
+//       });
+//     } catch(err){
+//       console.log(err);
+//     }
+// } 
+
+// 거래 조회 데이터 setState에 저장
+// const handleSetVal = (value) => {
+//     var copy = [...val];
+//     copy = value;
+//     setVal(copy)
+// }
+
+  // 총액 계산
+  const handleSetTotal = () => {
+
+    var TotalDeposit = 0; 
+    var TotalWithdrawal = 0;
+    
+    val.map(function(sum) {
+      TotalDeposit += sum.deposit;
+      TotalWithdrawal += sum.withdrawal;
+    });
+
+    setTotal({
+      deposit: TotalDeposit,
+      withdrawal: TotalWithdrawal
+    })
+  }
+
+  /* axios */ 
+  // 미분류 검색
+export const getTransactionsByCat = async () => {
+    try {
+      await Req.get("/transactionsByCat", {params: {category: "미분류"}} )
+      .then((result) => {
+        handleSetVal(result.data);
+      });
+    } catch(err){
+      console.log(err);
+    }
+  } 
+
+/* * * * * pie
+ * Pie Chart Function 
+ */
+
+
+// 월별 DB 조회 function
+export const getTransactionsByDate = async (isDate) => {
+    try {
+        await Req.get("/aggrByDate", {params: {date: isDate}} )
+        .then((result) => {
+        refine (result.data[0].category)
+        var copy = [];
+        copy = result.data[0];
+        handleSetDate(copy.date)
+        // handleSetVal(copy)
+        });
+    } catch(err){
+        console.log(err);
+    }
+} 
+
+// 데이터 쓰기
+export const handleSetVal = (value) => {
+    var copy = [...val];
+    copy = value;
+    setVal(copy)
+    }
+
+// pie chart data정제
+export function refine (data) {
+    var dataSet;
+    dataSet = data.map( (el, index) => {
+        return {
+            id: el._id,
+            label: el._id,
+            value: el.Total,
+            color: colorArr[index],
+            etc: el.arr
+        }
+    })
+
+    setData(dataSet)
+}
+
+  // 날짜 별 지출 데이터 저장 및 UI rendering 
+ export const handleSetDate = (value) => {
+    var copy;
+
+    console.log(value, "value")
+    copy = {
+      start: value[0].start,
+      last: value[0].last 
+    };
+
+    setDate(copy)
+        console.log(date, "date")
+  }
+
+  // test 기능
+ export const handleConfirm = () => {
+    console.log (dayjs("2024.02.25 19:36:39").toISOString())
+  }
+
+  // 에러시 임시 사용
+  function generateRandom() {
+    var length = 8,
+    charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    retVal = "";
+    for (var i = 0, n = charset.length; i < length; ++i) {
+      retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+  }

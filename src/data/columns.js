@@ -41,12 +41,6 @@ export const columns = [
     type: "number"
   },
   {
-    field: "balance",
-    headerName: "잔액",
-    flex: 0.3,
-    type: "number"
-  },
-  {
     field: "memo",
     headerName: "메모",
     flex: 1,
