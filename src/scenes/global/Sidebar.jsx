@@ -45,6 +45,8 @@ const Sidebar = () => {
   return (
     <Box
       sx={{
+        position: 'sticky',
+        top: 0,
         "& .pro-sidebar-inner": {
           background: `${colors.primary[400]} !important`,
         },
@@ -52,7 +54,7 @@ const Sidebar = () => {
           backgroundColor: "transparent !important",
         },
         "& .pro-inner-item": {
-          padding: "5px 35px 5px 20px !important",
+          padding: "4px 35px 4px 20px !important",
         },
         "& .pro-inner-item:hover": {
           color: "#868dfb !important",
@@ -69,7 +71,7 @@ const Sidebar = () => {
             onClick={() => setIsCollapsed(!isCollapsed)}
             icon={isCollapsed ? <MenuOutlinedIcon /> : undefined}
             style={{
-              margin: "10px 0 20px 0",
+              margin: "8px 0 16px 0",
               color: colors.grey[100],
             }}
           >
@@ -91,7 +93,7 @@ const Sidebar = () => {
           </MenuItem>
 
           {!isCollapsed && (
-            <Box mb="25px">
+            <Box>
               <Box display="flex" justifyContent="center" alignItems="center">
                 <img
                   alt="profile-user"
@@ -106,13 +108,13 @@ const Sidebar = () => {
                   variant="h2"
                   color={colors.grey[100]}
                   fontWeight="bold"
-                  sx={{ m: "10px 0 0 0" }}
+                  // sx={{ m: "10px 0 0 0" }}
                 >
-                  Jessica Smith
+                  KIM
                 </Typography>
-                <Typography variant="h5" color={colors.greenAccent[500]}>
+                {/* <Typography variant="h5" color={colors.greenAccent[500]}>
                   Smart Admin
-                </Typography>
+                </Typography> */}
               </Box>
             </Box>
           )}
@@ -142,7 +144,7 @@ const Sidebar = () => {
             />
             <Item
               title="거래내역 확인"
-              to="/contacts"
+              to="/Transactions"
               icon={<ContactsOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -156,7 +158,7 @@ const Sidebar = () => {
             />
             <Item
               title="카테고리별 지출 내역"
-              to="/invoices"
+              to="/aicategorizing"
               icon={<ReceiptOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}

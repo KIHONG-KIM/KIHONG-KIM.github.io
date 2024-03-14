@@ -5,7 +5,7 @@ import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Team from "./scenes/team";
 import AIcategorizing from "./scenes/AIcategorizing";
-import Contacts from "./scenes/transactions";
+import Transactions from "./scenes/transactions";
 import Bar from "./scenes/bar";
 import Form from "./scenes/form";
 import Line from "./scenes/line";
@@ -28,14 +28,14 @@ function App() {
         <CssBaseline />
         <div className="app">
           <Sidebar isSidebar={isSidebar} />
-          <main className="content">
+          <main className="content" style={{ overflow: 'auto' }} >
             <Topbar setIsSidebar={setIsSidebar} />
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/upload" element={<Upload />} />
-              <Route path="/contacts" element={<Contacts />} />
+              <Route path="/Transactions" element={<Transactions />} />
               <Route path="/calendar" element={<Calendar />} />
-              <Route path="/invoices" element={<AIcategorizing />} />
+              <Route path="/aicategorizing" element={<AIcategorizing />} />
               <Route path="/form" element={<Form />} />
               <Route path="/team" element={<Team />} />
               <Route path="/data" element={<DataCenter />} />
