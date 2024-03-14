@@ -12,7 +12,7 @@ import dayjs from 'dayjs';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import StatBox from "../../components/StatBox";
-// import costKeyword from "../../data/data"
+
 
 const AIcategorizing = () => {
   const theme = useTheme();
@@ -30,7 +30,7 @@ const AIcategorizing = () => {
 
   useEffect(() => {
     getTransactionsByCat()
-  })
+  }, [])
 
   /* axios */ 
   // 미분류 검색
@@ -51,18 +51,6 @@ const AIcategorizing = () => {
     copy = value;
     setVal(copy)
   }
-
-  // 날짜로 검색 
-  // const getTransactionsByDate = async (isDate) => {
-  //     try {
-  //       await Req.get("/transactionsByDate", {params: {date: isDate}} )
-  //       .then((result) => {
-  //         handleSetVal(result.data);
-  //       });
-  //     } catch(err){
-  //       console.log(err);
-  //     }
-  // } 
 
   // OPENAI Assist에게 요청보내기
   const handleAskAssistant = async (data) => {
@@ -90,18 +78,6 @@ const AIcategorizing = () => {
     }
   }
 
-  // 아직
-  const postTransactionUpadate = async (data) => {
-    try {
-      await Req.post("/transactionUpdate", data )
-      .then((result) => {
-        console.log(result.data)
-      });
-    } catch(err){
-      console.log(err);
-    }
-  } 
-
   // 키워드 콜렉션에서 가져오기
   const getKeywords = async () => {
     try {
@@ -126,6 +102,18 @@ const AIcategorizing = () => {
       console.log(err);
     }
   } 
+
+    // 기존 데이터 업데이트하기
+    const postTransactionUpadate = async (data) => {
+      try {
+        await Req.post("/transactionUpdate", data )
+        .then((result) => {
+          console.log(result.data)
+        });
+      } catch(err){
+        console.log(err);
+      }
+    } 
   
   var arr=[];
   const handleGetKeyword = async () => {
@@ -175,7 +163,7 @@ function categorizeSwitch(word, category) {
       // console.log(word, "생활비")
       arr.생활비.push(word);
       break;
-    case '교통비':
+    case '교통/통신비':
       // console.log(word, "교통비")
       arr.교통비.push(word);
       break;

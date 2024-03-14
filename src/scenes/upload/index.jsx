@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Box, Button } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -7,98 +7,136 @@ import { useTheme } from "@mui/material";
 import * as XLSX from 'xlsx';
 import { columns } from "../../data/columns";
 import Req from "../../config/axios";
+import dayjs from "dayjs";
 
 const Upload = () => {
 
-    const theme = useTheme();
-    const colors = tokens(theme.palette.mode);
-    const [ val, setVal ] = useState([]);
-    const keyword = useRef();
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+  const [ val, setVal ] = useState([]);
+  const keyword = useRef();
 
-    const handleConfirm = (e) => {
+  useEffect(() => {
+    getKeywords()
+  }, [])
 
-      handleGeKeyword()
-
+  // 키워드 콜렉션에서 가져오기
+  const getKeywords = async () => {
+    try {
+      await Req.get("/keyword")
+      .then((result) => {
+        console.log(result.data)
+        keyword.current = result.data; // 키워드 ref에 저장
+        handleCategorize()
+      });
+    } catch(err){
+      console.log(err);
     }
+  } 
 
-    const handleDBCreate = async (e) => {
+  // DB 입력하기
+  const handleDBCreate = async (e) => {
 
-        try{
-          console.log('val', val);
-          const CreateDataBase = await Req.post("/transaction", val);
-          console.log(CreateDataBase);
-        } catch(err){
-          console.log(err);
-        }
-    };
-    
-    var arr=[];
-
-    const handleGeKeyword = async () => {
-
-      try {
-        await Req.get("/keyword")
-        .then((result) => {
-          keyword.current = result.data;
-          console.log(keyword.current)
-
-        });
+      try{
+        console.log('val', val);
+        const CreateDataBase = await Req.post("/transaction", val);
+        console.log(CreateDataBase);
       } catch(err){
         console.log(err);
       }
+  };
 
-      arr.식비 = [];
-      arr.생활비 = [];
-      arr.교통비 = [];
-      arr.고정지출 = [];
-      arr.미분류 = [];
+  var arr=[];
+  const handleCategorize = async () => {
 
+    arr.식비 = [];
+    arr.생활비 = [];
+    arr.교통비 = [];
+    arr.고정지출 = [];
+    arr.기타 = [];
+    arr.주거비 = [];
+    arr.문화생활여가 = [];
+    arr.미분류 = [];
+
+    // useRef에 있는 데이터로 arr 배열에 분류합니다.
+    if (keyword.current !== undefined) {
       keyword.current.map( (element) => {
-        
-        switch(element.category) {
-          case '식비': 
-            arr.식비.push(element.word);
-            break;
-          case '생활비': 
-            arr.생활비.push(element.word);
-            break;
-          case '교통비':
-            arr.교통비.push(element.word);
-            break;
-          case "고정지출": 
-            arr.고정지출.push(element.word);
-          break;
-          default:
-            arr.미분류.push(element.word);
-          break;         
+
+        var spacebar = null;
+        spacebar = element.word.split(" ");
+
+        if ( spacebar.length > 1 ) {
+          spacebar.map((el) => {
+            categorizeSwitch(el, element.category)
+            return null;
+          })
+
+        } else {
+          categorizeSwitch(element.word, element.category )
         }
+
         return null;
       })
-      
-      console.log(arr)
     }
+    
+    console.log(arr)
+  }
 
-    const handleReset = () => {
-      
+/// 분류 시스템 Switch
+function categorizeSwitch(word, category) {
+  // console.log(element, "element")
+  switch(category) {
+    case '식비': 
+      // console.log(word, "식비")
+      arr.식비.push(word);
+      break;
+    case '생활비': 
+      // console.log(word, "생활비")
+      arr.생활비.push(word);
+      break;
+    case '교통/통신비':
+      // console.log(word, "교통비")
+      arr.교통비.push(word);
+      break;
+    case "고정지출": 
+      // console.log(word, "고정지출")
+      arr.고정지출.push(word);
+      break;
+    case "기타":
+      // console.log(word, "기타")
+      arr.기타.push(word);
+      break;         
+    case "주거비":
+      // console.log(word, "주거비")
+      arr.주거비.push(word);
+      break;         
+    case "문화생활/여가":
+      // console.log(word, "문화생활여가")
+      arr.문화생활여가.push(word);
+      break;         
+    default:
+      console.log(word, "미분류")
+      arr.미분류.push(word);
+      break;         
+  }
+}
+
+// 카테고리 분별 시스템
+function categorizeExpense(item) {
+
+  let category;
+  for (const key in arr) {
+    if (arr[key].some(word => item.includes(word))) {
+        category = key;
+        break;
     }
+  }
 
-  //// 카테고리 분별 시스템
-  function categorizeExpense(item) {
+  if (category === undefined) {
+      category = '미분류'
+  }
 
-    let category;
-
-    for (const key in arr) {
-        if (arr[key].some(word => item.includes(word))) {
-            category = key;
-            break;
-        }
-    }
-
-    if (category === undefined) {
-        category = '미분류'
-    }
-
-    return category;
+  return category;
 }
 
     const handleDataParsing = (e) => {
@@ -132,9 +170,10 @@ const Upload = () => {
 
         // 데이터 저장을 위한 전처리
         var newData = [...val];
-        newData = dataParse.map(function(element, index) {
+        newData = dataParse.map((element, index) => {
+          console.log(element)
           return {
-            date: element[0].trim(),
+            date: dayjs(element[0].trim()).toISOString(),
             summary: element[1].trim(),
             title: element[2].trim(),
             memo: element[3].trim(),
@@ -143,7 +182,7 @@ const Upload = () => {
             balance: element[6],
             place: element[7].trim(),
             etc:element[8].trim(),
-            category: categorizeExpense(element[2].trim())
+            category: categorizeExpense(element[2])
           };
         });
 
@@ -156,6 +195,16 @@ const Upload = () => {
 
     };
     reader.readAsBinaryString(f)
+  }
+
+  // 카테고리 분류
+  const handleConfirm = (e) => {
+    getKeywords()
+    
+  }
+
+  function 기타 () {
+    console.log(val, "val")
   }
 
   function generateRandom() {
@@ -171,13 +220,13 @@ const Upload = () => {
   return (
     <Box m="20px">
       <Header
-        title="CONTACTS"
+        title="거래 내역 확인"
         subtitle="List of Contacts for Future Reference"
       />
       <input type="file" name="file" id="file" onChange={handleDataParsing} />
       <Button color="secondary" variant="contained" onClick={handleConfirm}>로그 확인</Button>
       <Button color="secondary" variant="contained" onClick={handleDBCreate}>서버에 저장</Button>
-      <Button color="secondary" variant="contained" onClick={handleReset}>기타</Button>
+      <Button color="secondary" variant="contained" onClick={기타}>기타</Button>
       <Box
         m="10px 0 0 0"
         height="75vh"
