@@ -1,0 +1,700 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Tech Blog">
+    <title>MainQuest01(2) - 아이펠 통합 관리 프로그램 - Tech Blog</title>
+    <meta name="author" content="KIHONG-KIM">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"KIHONG-KIM","sameAs":[]},"articleBody":"아이펠 통합 관리 프로그램\n\n\n\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160# [메인 퀘스트 2번: 아이펠 통합 관리 프로그램 - 2점]# 아이펠 캠퍼스에서는 그루들에게 학번을 부여하고 퀘스트 점수를 관리하고 있습니다. 이제부터 그루들의 정보와# 학번과 점수를 관리할 수 있는 Aiffel 클래스를 만들어보도록 하겠습니다.# Q1. Aiffel 클래스 만들기# 생성자에는 이름, 입학연도, 기수, 과정명의 인자를 받습니다. 이를 통해 학번을 생성하고 학번 정보로 8기 코어# 그루 명단을 관리해봅시다.# 학번은 7자리로 이루어져 있습니다. : YYNNCXX# ● 학번 생성 규칙:# ○ YY: 연도 마지막 두자리 (2024 -&gt; 24)# ○ NN: 기수 (온라인 8기는 31기)# ○ C: 과정 종류 (리서치 = 1, 코어 = 2)# ○ XX: 가나다순 번호from random import shuffle# 이름을 가렸어요..🫡코어8기 = [&quot;임**&quot;,&quot;정**&quot;,&quot;강**&quot;,&quot;김**&quot;,&quot;김**&quot;,&quot;김**&quot;,&quot;김**&quot;,&quot;김**&quot;,&quot;김**&quot;,&quot;김**&quot;,&quot;박**&quot;,&quot;서**&quot;,&quot;소**&quot;,&quot;신**&quot;,&quot;유**&quot;,&quot;윤**&quot;,&quot;이**&quot;,&quot;이**&quot;,&quot;이**&quot;,]코어8기.sort()# 전체 학생 이름 리스트로 한꺼번에 할당하기class Modu:    def __init__(self, list):        self.모든학생관리 = []        # 모든 학생을 한번에 입력        for i in range(len(list)):            globals()[&quot;&#123;&#125;&quot;.format(list[i])] = Aiffel(list[i],&quot;2024&quot;,&quot;8&quot;,&quot;코어&quot;)            self.모든학생관리.append(globals()[&quot;&#123;&#125;&quot;.format(list[i])])    # 전체 학생을 열람합니다.    def 학생열람(self):        전체학생보기 = &quot;\\n&quot;.join([ 한명.print_info() for 한명 in self.모든학생관리 ])        print(&quot;전체 학생수 :&quot;,len(self.모든학생관리))        print(전체학생보기)    # [ Quest ] 전체 점수 내림차순 정렬하여 열람    def 퀘스트점수열람(self):        퀘스트점수 = []        for i in self.모든학생관리:            퀘스트점수.append([i.이름, i.점수])            퀘스트점수.sort(key=lambda x:-x[1])        for 이름, 점수 in 퀘스트점수:            print(이름, 점수)    # [ 이름으로 찾기 ]    def 이름찾기(self, name):        for student in self.모든학생관리:            if student.이름 == name:                return student        return None  # 학생을 찾지 못한 경우 None 반환    # [ Quest ] 섞어주기    def 그룹화(self, 몇명):        list = self.모든학생관리        result = []     # 전체 객체에서 이름 배열로 변환 위한 list        newList = []    # 랜덤 섞어서 몇명으로 다시 변환하기 위한 list        for i in range(0, len(list)):            result.append(list[i].getName())        # 섞어주기        shuffle(result)        for i in range(0, len(result), 몇명):            newList.append(result[i:i + 몇명])        if len(result) % 몇명 == 1:            newList[0].extend(newList[-1])            newList.pop()        # 출력        for i in newList:            print(i)        return    # 삭제하기    def deleteOne(self, name):        target_student = self.이름찾기(name)        if target_student:            print(f&quot;&#123;target_student.getName()&#125; 학생을 삭제합니다.&quot;)            target_student.minusCount()            self.모든학생관리.remove(target_student)        return None  # 학생을 찾지 못한 경우 None 반환class Aiffel:    count = 0       # 0부터 시작하지 않고, 1부터 시작    def __init__(self, 이름, 입학연도, 기수, 과정명):        self.이름 = 이름                # 김기홍        self.입학연도 = 입학연도        # 2024 - 24        self.기수 = 기수                # 8기 - 31        self.과정명 = 과정명            # 코어 - 2        self.학번 = self.createClassNum()    # 순번으로 자동 생성        self.점수 = 80        Aiffel.count += 1    # 학번 생성 메서드    def createClassNum(self):        YY = self.입학연도[-2:]        NN = &quot;&quot;        C = &quot;&quot;        if self.기수 == &quot;8&quot;:            NN = &quot;31&quot;        if self.과정명 == &quot;리서치&quot;:            C = &quot;1&quot;        if self.과정명 == &quot;코어&quot;:            C = &quot;2&quot;        XX = f&quot;&#123;Aiffel.count:02d&#125;&quot;        return f&quot;&#123;YY&#125;&#123;NN&#125;&#123;C&#125;&#123;XX&#125;&quot;    @classmethod    def print_count(cls):        print(&#x27;현재 학생은 &#123;0&#125;명 입니다.&#x27;.format(cls.count))    # cls로 클래스 속성에 접근    def minusCount(self):        self.count = self.count - 1        return self.count    def print_info(self):        return f&quot;이름: &#123;self. 이름&#125;, 입학연도: &#123;self.입학연도&#125;, 기수: &#123;self.기수&#125;, 과정명: &#123;self.과정명&#125;, 학번: &#123;self.학번&#125;&quot;    def getName(self):        return self.이름    def setName(self):        return self.이름    def getScore(self):        return self.점수    def addScore(self, value):        self.점수 += value    def minusScore(self, value):        self.점수 -= valueall = Modu(코어8기)\n\n\n123456789101112131415161718192021# Q2. 점수 관리 메서드# 다음과 같은 기능이 추가되어야 합니다.# ● 퀘스트 점수 부여a = all.이름찾기(&quot;소다흰&quot;)  # 이름으로 학생 검색a.addScore(10)a = all.이름찾기(&quot;김기홍&quot;)  # 이름으로 학생 검색a.addScore(4)b = all.이름찾기(&quot;김주현&quot;)  # 이름으로 학생 검색b.addScore(6)c = all.이름찾기(&quot;김동규&quot;)  # 이름으로 학생 검색c.addScore(5)# ● 퀘스트 점수 차감 (페널티 부여)d = all.이름찾기(&quot;김기홍&quot;)  # 이름으로 학생 검색d.minusScore(1)# ● 현재 총점 출력print(f&quot;&#123;a.이름&#125; 학생 점수: &#123;a.getScore()&#125;&quot;)\n\n김기홍 학생 점수: 83\n\n1234# Q3. 그루 명단 관리하기# 다음과 같은 기능을 가진 프로그램을 만들어 봅시다.# ● 전체 명단과 정보를 보는 기능all.학생열람()\n\n전체 학생수 : 19\n이름: 강대식, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431200\n이름: 김기홍, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431201\n이름: 김동규, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431202\n이름: 김소영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431203\n이름: 김원영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431204\n이름: 김재이, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431205\n이름: 김주현, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431206\n이름: 김진서, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431207\n이름: 박진석, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431208\n이름: 서은재, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431209\n이름: 소다흰, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431210\n이름: 신승우, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431211\n이름: 유제민, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431212\n이름: 윤선웅, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431213\n이름: 이유진, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431214\n이름: 이준오, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431215\n이름: 이한나, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431216\n이름: 임상운, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431217\n이름: 정권영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431218\n\n12# ● 퀘스트 점수를 기준으로 내림차순으로 정렬해서 보는 기능all.퀘스트점수열람()\n\n소다흰 90\n김주현 86\n김동규 85\n김기홍 83\n강대식 80\n김소영 80\n김원영 80\n김재이 80\n김진서 80\n박진석 80\n서은재 80\n신승우 80\n유제민 80\n윤선웅 80\n이유진 80\n이준오 80\n이한나 80\n임상운 80\n정권영 80\n\n1234567# ● 특정 인물 정보를 삭제하는 기능all.deleteOne(&quot;김기홍&quot;)all.deleteOne(&quot;강대식&quot;)all.deleteOne(&quot;김소영&quot;)all.deleteOne(&quot;김동규&quot;)all.학생열람()\n\n김기홍 학생을 삭제합니다.\n강대식 학생을 삭제합니다.\n김소영 학생을 삭제합니다.\n김동규 학생을 삭제합니다.\n전체 학생수 : 15\n이름: 김원영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431204\n이름: 김재이, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431205\n이름: 김주현, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431206\n이름: 김진서, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431207\n이름: 박진석, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431208\n이름: 서은재, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431209\n이름: 소다흰, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431210\n이름: 신승우, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431211\n이름: 유제민, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431212\n이름: 윤선웅, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431213\n이름: 이유진, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431214\n이름: 이준오, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431215\n이름: 이한나, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431216\n이름: 임상운, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431217\n이름: 정권영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431218\n\n12345678910# Q4. 그룹핑 기능 추가하기# 그루 명단을 기준으로 2인, 3인, 4인 조를 랜덤하게 구성하는 기능을 추가해봅시다.list = all.그룹화(2)print()list = all.그룹화(3)print()list = all.그룹화(4)\n\n[&#39;이유진&#39;, &#39;김재이&#39;, &#39;윤선웅&#39;]\n[&#39;서은재&#39;, &#39;유제민&#39;]\n[&#39;소다흰&#39;, &#39;김진서&#39;]\n[&#39;김주현&#39;, &#39;신승우&#39;]\n[&#39;박진석&#39;, &#39;김원영&#39;]\n[&#39;정권영&#39;, &#39;임상운&#39;]\n[&#39;이준오&#39;, &#39;이한나&#39;]\n\n[&#39;임상운&#39;, &#39;윤선웅&#39;, &#39;이준오&#39;]\n[&#39;이유진&#39;, &#39;김재이&#39;, &#39;신승우&#39;]\n[&#39;서은재&#39;, &#39;유제민&#39;, &#39;김원영&#39;]\n[&#39;이한나&#39;, &#39;박진석&#39;, &#39;소다흰&#39;]\n[&#39;김진서&#39;, &#39;정권영&#39;, &#39;김주현&#39;]\n\n[&#39;이준오&#39;, &#39;김재이&#39;, &#39;임상운&#39;, &#39;신승우&#39;]\n[&#39;정권영&#39;, &#39;김진서&#39;, &#39;김원영&#39;, &#39;서은재&#39;]\n[&#39;이한나&#39;, &#39;이유진&#39;, &#39;김주현&#39;, &#39;윤선웅&#39;]\n[&#39;유제민&#39;, &#39;박진석&#39;, &#39;소다흰&#39;]\n\n","dateCreated":"2024-05-28T00:00:00+09:00","dateModified":"2024-10-07T01:14:12+09:00","datePublished":"2024-05-28T00:00:00+09:00","description":"아이펠 통합 관리 프로그램","headline":"MainQuest01(2) - 아이펠 통합 관리 프로그램","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"},"publisher":{"@type":"Organization","name":"KIHONG-KIM","sameAs":[]},"url":"https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/","keywords":"Tag"}</script>
+    <meta name="description" content="아이펠 통합 관리 프로그램">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="MainQuest01(2) - 아이펠 통합 관리 프로그램">
+<meta property="og:url" content="https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/index.html">
+<meta property="og:site_name" content="Tech Blog">
+<meta property="og:description" content="아이펠 통합 관리 프로그램">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:image" content="https://colab.research.google.com/assets/colab-badge.svg">
+<meta property="article:published_time" content="2024-05-27T15:00:00.000Z">
+<meta property="article:modified_time" content="2024-10-06T16:14:12.437Z">
+<meta property="article:author" content="KIHONG-KIM">
+<meta property="article:tag" content="Tag">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://colab.research.google.com/assets/colab-badge.svg">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-9zeroke2fxhgdngsgodndkdak2ckc2tfmligieutqkwcgkwydxe62exfmarl.min.css">
+
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            Tech Blog
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="카테고리"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">카테고리</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="태그"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">태그</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="아카이브"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">아카이브</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="검색"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">검색</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            MainQuest01(2) - 아이펠 통합 관리 프로그램
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2024-05-28T00:00:00+09:00">
+	
+		    2024/05/28
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/Python/">Python</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>아이펠 통합 관리 프로그램</p>
+<span id="more"></span>
+
+<p><a href="https://colab.research.google.com/github/KIHONG-KIM/AIFFEL_quest/blob/main/Main_quest/Quest01/MainQuest2.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># [메인 퀘스트 2번: 아이펠 통합 관리 프로그램 - 2점]</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 아이펠 캠퍼스에서는 그루들에게 학번을 부여하고 퀘스트 점수를 관리하고 있습니다. 이제부터 그루들의 정보와</span></span><br><span class="line"><span class="comment"># 학번과 점수를 관리할 수 있는 Aiffel 클래스를 만들어보도록 하겠습니다.</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Q1. Aiffel 클래스 만들기</span></span><br><span class="line"><span class="comment"># 생성자에는 이름, 입학연도, 기수, 과정명의 인자를 받습니다. 이를 통해 학번을 생성하고 학번 정보로 8기 코어</span></span><br><span class="line"><span class="comment"># 그루 명단을 관리해봅시다.</span></span><br><span class="line"><span class="comment"># 학번은 7자리로 이루어져 있습니다. : YYNNCXX</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ● 학번 생성 규칙:</span></span><br><span class="line"><span class="comment"># ○ YY: 연도 마지막 두자리 (2024 -&gt; 24)</span></span><br><span class="line"><span class="comment"># ○ NN: 기수 (온라인 8기는 31기)</span></span><br><span class="line"><span class="comment"># ○ C: 과정 종류 (리서치 = 1, 코어 = 2)</span></span><br><span class="line"><span class="comment"># ○ XX: 가나다순 번호</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> random <span class="keyword">import</span> shuffle</span><br><span class="line"></span><br><span class="line"><span class="comment"># 이름을 가렸어요..🫡</span></span><br><span class="line">코어<span class="number">8</span>기 = [</span><br><span class="line"><span class="string">&quot;임**&quot;</span>,</span><br><span class="line"><span class="string">&quot;정**&quot;</span>,</span><br><span class="line"><span class="string">&quot;강**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;김**&quot;</span>,</span><br><span class="line"><span class="string">&quot;박**&quot;</span>,</span><br><span class="line"><span class="string">&quot;서**&quot;</span>,</span><br><span class="line"><span class="string">&quot;소**&quot;</span>,</span><br><span class="line"><span class="string">&quot;신**&quot;</span>,</span><br><span class="line"><span class="string">&quot;유**&quot;</span>,</span><br><span class="line"><span class="string">&quot;윤**&quot;</span>,</span><br><span class="line"><span class="string">&quot;이**&quot;</span>,</span><br><span class="line"><span class="string">&quot;이**&quot;</span>,</span><br><span class="line"><span class="string">&quot;이**&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">코어<span class="number">8</span>기.sort()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 전체 학생 이름 리스트로 한꺼번에 할당하기</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Modu</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, <span class="built_in">list</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.모든학생관리 = []</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 모든 학생을 한번에 입력</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(<span class="built_in">list</span>)):</span><br><span class="line">            <span class="built_in">globals</span>()[<span class="string">&quot;&#123;&#125;&quot;</span>.<span class="built_in">format</span>(<span class="built_in">list</span>[i])] = Aiffel(<span class="built_in">list</span>[i],<span class="string">&quot;2024&quot;</span>,<span class="string">&quot;8&quot;</span>,<span class="string">&quot;코어&quot;</span>)</span><br><span class="line">            <span class="variable language_">self</span>.모든학생관리.append(<span class="built_in">globals</span>()[<span class="string">&quot;&#123;&#125;&quot;</span>.<span class="built_in">format</span>(<span class="built_in">list</span>[i])])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 전체 학생을 열람합니다.</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">학생열람</span>(<span class="params">self</span>):</span><br><span class="line">        전체학생보기 = <span class="string">&quot;\n&quot;</span>.join([ 한명.print_info() <span class="keyword">for</span> 한명 <span class="keyword">in</span> <span class="variable language_">self</span>.모든학생관리 ])</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;전체 학생수 :&quot;</span>,<span class="built_in">len</span>(<span class="variable language_">self</span>.모든학생관리))</span><br><span class="line">        <span class="built_in">print</span>(전체학생보기)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] 전체 점수 내림차순 정렬하여 열람</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">퀘스트점수열람</span>(<span class="params">self</span>):</span><br><span class="line">        퀘스트점수 = []</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="variable language_">self</span>.모든학생관리:</span><br><span class="line">            퀘스트점수.append([i.이름, i.점수])</span><br><span class="line">            퀘스트점수.sort(key=<span class="keyword">lambda</span> x:-x[<span class="number">1</span>])</span><br><span class="line">        <span class="keyword">for</span> 이름, 점수 <span class="keyword">in</span> 퀘스트점수:</span><br><span class="line">            <span class="built_in">print</span>(이름, 점수)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ 이름으로 찾기 ]</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">이름찾기</span>(<span class="params">self, name</span>):</span><br><span class="line">        <span class="keyword">for</span> student <span class="keyword">in</span> <span class="variable language_">self</span>.모든학생관리:</span><br><span class="line">            <span class="keyword">if</span> student.이름 == name:</span><br><span class="line">                <span class="keyword">return</span> student</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span>  <span class="comment"># 학생을 찾지 못한 경우 None 반환</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] 섞어주기</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">그룹화</span>(<span class="params">self, 몇명</span>):</span><br><span class="line">        <span class="built_in">list</span> = <span class="variable language_">self</span>.모든학생관리</span><br><span class="line">        result = []     <span class="comment"># 전체 객체에서 이름 배열로 변환 위한 list</span></span><br><span class="line">        newList = []    <span class="comment"># 랜덤 섞어서 몇명으로 다시 변환하기 위한 list</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(<span class="built_in">list</span>)):</span><br><span class="line">            result.append(<span class="built_in">list</span>[i].getName())</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 섞어주기</span></span><br><span class="line">        shuffle(result)</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(result), 몇명):</span><br><span class="line">            newList.append(result[i:i + 몇명])</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(result) % 몇명 == <span class="number">1</span>:</span><br><span class="line">            newList[<span class="number">0</span>].extend(newList[-<span class="number">1</span>])</span><br><span class="line">            newList.pop()</span><br><span class="line">        <span class="comment"># 출력</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> newList:</span><br><span class="line">            <span class="built_in">print</span>(i)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 삭제하기</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">deleteOne</span>(<span class="params">self, name</span>):</span><br><span class="line">        target_student = <span class="variable language_">self</span>.이름찾기(name)</span><br><span class="line">        <span class="keyword">if</span> target_student:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;target_student.getName()&#125;</span> 학생을 삭제합니다.&quot;</span>)</span><br><span class="line">            target_student.minusCount()</span><br><span class="line">            <span class="variable language_">self</span>.모든학생관리.remove(target_student)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">None</span>  <span class="comment"># 학생을 찾지 못한 경우 None 반환</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Aiffel</span>:</span><br><span class="line">    count = <span class="number">0</span>       <span class="comment"># 0부터 시작하지 않고, 1부터 시작</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, 이름, 입학연도, 기수, 과정명</span>):</span><br><span class="line">        <span class="variable language_">self</span>.이름 = 이름                <span class="comment"># 김기홍</span></span><br><span class="line">        <span class="variable language_">self</span>.입학연도 = 입학연도        <span class="comment"># 2024 - 24</span></span><br><span class="line">        <span class="variable language_">self</span>.기수 = 기수                <span class="comment"># 8기 - 31</span></span><br><span class="line">        <span class="variable language_">self</span>.과정명 = 과정명            <span class="comment"># 코어 - 2</span></span><br><span class="line">        <span class="variable language_">self</span>.학번 = <span class="variable language_">self</span>.createClassNum()    <span class="comment"># 순번으로 자동 생성</span></span><br><span class="line">        <span class="variable language_">self</span>.점수 = <span class="number">80</span></span><br><span class="line">        Aiffel.count += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 학번 생성 메서드</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">createClassNum</span>(<span class="params">self</span>):</span><br><span class="line">        YY = <span class="variable language_">self</span>.입학연도[-<span class="number">2</span>:]</span><br><span class="line">        NN = <span class="string">&quot;&quot;</span></span><br><span class="line">        C = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.기수 == <span class="string">&quot;8&quot;</span>:</span><br><span class="line">            NN = <span class="string">&quot;31&quot;</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.과정명 == <span class="string">&quot;리서치&quot;</span>:</span><br><span class="line">            C = <span class="string">&quot;1&quot;</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.과정명 == <span class="string">&quot;코어&quot;</span>:</span><br><span class="line">            C = <span class="string">&quot;2&quot;</span></span><br><span class="line">        XX = <span class="string">f&quot;<span class="subst">&#123;Aiffel.count:02d&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;YY&#125;</span><span class="subst">&#123;NN&#125;</span><span class="subst">&#123;C&#125;</span><span class="subst">&#123;XX&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">print_count</span>(<span class="params">cls</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;현재 학생은 &#123;0&#125;명 입니다.&#x27;</span>.<span class="built_in">format</span>(cls.count))    <span class="comment"># cls로 클래스 속성에 접근</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">minusCount</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.count = <span class="variable language_">self</span>.count - <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.count</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">print_info</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;이름: <span class="subst">&#123;self. 이름&#125;</span>, 입학연도: <span class="subst">&#123;self.입학연도&#125;</span>, 기수: <span class="subst">&#123;self.기수&#125;</span>, 과정명: <span class="subst">&#123;self.과정명&#125;</span>, 학번: <span class="subst">&#123;self.학번&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">getName</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.이름</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">setName</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.이름</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">getScore</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.점수</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">addScore</span>(<span class="params">self, value</span>):</span><br><span class="line">        <span class="variable language_">self</span>.점수 += value</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">minusScore</span>(<span class="params">self, value</span>):</span><br><span class="line">        <span class="variable language_">self</span>.점수 -= value</span><br><span class="line"></span><br><span class="line"><span class="built_in">all</span> = Modu(코어<span class="number">8</span>기)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Q2. 점수 관리 메서드</span></span><br><span class="line"><span class="comment"># 다음과 같은 기능이 추가되어야 합니다.</span></span><br><span class="line"><span class="comment"># ● 퀘스트 점수 부여</span></span><br><span class="line">a = <span class="built_in">all</span>.이름찾기(<span class="string">&quot;소다흰&quot;</span>)  <span class="comment"># 이름으로 학생 검색</span></span><br><span class="line">a.addScore(<span class="number">10</span>)</span><br><span class="line"></span><br><span class="line">a = <span class="built_in">all</span>.이름찾기(<span class="string">&quot;김기홍&quot;</span>)  <span class="comment"># 이름으로 학생 검색</span></span><br><span class="line">a.addScore(<span class="number">4</span>)</span><br><span class="line"></span><br><span class="line">b = <span class="built_in">all</span>.이름찾기(<span class="string">&quot;김주현&quot;</span>)  <span class="comment"># 이름으로 학생 검색</span></span><br><span class="line">b.addScore(<span class="number">6</span>)</span><br><span class="line"></span><br><span class="line">c = <span class="built_in">all</span>.이름찾기(<span class="string">&quot;김동규&quot;</span>)  <span class="comment"># 이름으로 학생 검색</span></span><br><span class="line">c.addScore(<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ● 퀘스트 점수 차감 (페널티 부여)</span></span><br><span class="line">d = <span class="built_in">all</span>.이름찾기(<span class="string">&quot;김기홍&quot;</span>)  <span class="comment"># 이름으로 학생 검색</span></span><br><span class="line">d.minusScore(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ● 현재 총점 출력</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;a.이름&#125;</span> 학생 점수: <span class="subst">&#123;a.getScore()&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>김기홍 학생 점수: 83
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Q3. 그루 명단 관리하기</span></span><br><span class="line"><span class="comment"># 다음과 같은 기능을 가진 프로그램을 만들어 봅시다.</span></span><br><span class="line"><span class="comment"># ● 전체 명단과 정보를 보는 기능</span></span><br><span class="line"><span class="built_in">all</span>.학생열람()</span><br></pre></td></tr></table></figure>
+
+<pre><code>전체 학생수 : 19
+이름: 강대식, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431200
+이름: 김기홍, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431201
+이름: 김동규, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431202
+이름: 김소영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431203
+이름: 김원영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431204
+이름: 김재이, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431205
+이름: 김주현, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431206
+이름: 김진서, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431207
+이름: 박진석, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431208
+이름: 서은재, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431209
+이름: 소다흰, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431210
+이름: 신승우, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431211
+이름: 유제민, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431212
+이름: 윤선웅, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431213
+이름: 이유진, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431214
+이름: 이준오, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431215
+이름: 이한나, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431216
+이름: 임상운, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431217
+이름: 정권영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431218
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ● 퀘스트 점수를 기준으로 내림차순으로 정렬해서 보는 기능</span></span><br><span class="line"><span class="built_in">all</span>.퀘스트점수열람()</span><br></pre></td></tr></table></figure>
+
+<pre><code>소다흰 90
+김주현 86
+김동규 85
+김기홍 83
+강대식 80
+김소영 80
+김원영 80
+김재이 80
+김진서 80
+박진석 80
+서은재 80
+신승우 80
+유제민 80
+윤선웅 80
+이유진 80
+이준오 80
+이한나 80
+임상운 80
+정권영 80
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ● 특정 인물 정보를 삭제하는 기능</span></span><br><span class="line"><span class="built_in">all</span>.deleteOne(<span class="string">&quot;김기홍&quot;</span>)</span><br><span class="line"><span class="built_in">all</span>.deleteOne(<span class="string">&quot;강대식&quot;</span>)</span><br><span class="line"><span class="built_in">all</span>.deleteOne(<span class="string">&quot;김소영&quot;</span>)</span><br><span class="line"><span class="built_in">all</span>.deleteOne(<span class="string">&quot;김동규&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">all</span>.학생열람()</span><br></pre></td></tr></table></figure>
+
+<pre><code>김기홍 학생을 삭제합니다.
+강대식 학생을 삭제합니다.
+김소영 학생을 삭제합니다.
+김동규 학생을 삭제합니다.
+전체 학생수 : 15
+이름: 김원영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431204
+이름: 김재이, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431205
+이름: 김주현, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431206
+이름: 김진서, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431207
+이름: 박진석, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431208
+이름: 서은재, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431209
+이름: 소다흰, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431210
+이름: 신승우, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431211
+이름: 유제민, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431212
+이름: 윤선웅, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431213
+이름: 이유진, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431214
+이름: 이준오, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431215
+이름: 이한나, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431216
+이름: 임상운, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431217
+이름: 정권영, 입학연도: 2024, 기수: 8, 과정명: 코어, 학번: 2431218
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Q4. 그룹핑 기능 추가하기</span></span><br><span class="line"><span class="comment"># 그루 명단을 기준으로 2인, 3인, 4인 조를 랜덤하게 구성하는 기능을 추가해봅시다.</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">list</span> = <span class="built_in">all</span>.그룹화(<span class="number">2</span>)</span><br><span class="line"><span class="built_in">print</span>()</span><br><span class="line"></span><br><span class="line"><span class="built_in">list</span> = <span class="built_in">all</span>.그룹화(<span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>()</span><br><span class="line"></span><br><span class="line"><span class="built_in">list</span> = <span class="built_in">all</span>.그룹화(<span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>[&#39;이유진&#39;, &#39;김재이&#39;, &#39;윤선웅&#39;]
+[&#39;서은재&#39;, &#39;유제민&#39;]
+[&#39;소다흰&#39;, &#39;김진서&#39;]
+[&#39;김주현&#39;, &#39;신승우&#39;]
+[&#39;박진석&#39;, &#39;김원영&#39;]
+[&#39;정권영&#39;, &#39;임상운&#39;]
+[&#39;이준오&#39;, &#39;이한나&#39;]
+
+[&#39;임상운&#39;, &#39;윤선웅&#39;, &#39;이준오&#39;]
+[&#39;이유진&#39;, &#39;김재이&#39;, &#39;신승우&#39;]
+[&#39;서은재&#39;, &#39;유제민&#39;, &#39;김원영&#39;]
+[&#39;이한나&#39;, &#39;박진석&#39;, &#39;소다흰&#39;]
+[&#39;김진서&#39;, &#39;정권영&#39;, &#39;김주현&#39;]
+
+[&#39;이준오&#39;, &#39;김재이&#39;, &#39;임상운&#39;, &#39;신승우&#39;]
+[&#39;정권영&#39;, &#39;김진서&#39;, &#39;김원영&#39;, &#39;서은재&#39;]
+[&#39;이한나&#39;, &#39;이유진&#39;, &#39;김주현&#39;, &#39;윤선웅&#39;]
+[&#39;유제민&#39;, &#39;박진석&#39;, &#39;소다흰&#39;]
+</code></pre>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Tag/" rel="tag">Tag</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/05/28/20240528-MainQuest1/"
+                    data-tooltip="MainQuest01(1) - 파이썬 은행계좌 만들기!"
+                    aria-label="이전: MainQuest01(1) - 파이썬 은행계좌 만들기!"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2024 KIHONG-KIM. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/05/28/20240528-MainQuest1/"
+                    data-tooltip="MainQuest01(1) - 파이썬 은행계좌 만들기!"
+                    aria-label="이전: MainQuest01(1) - 파이썬 은행계좌 만들기!"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest2/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <h4 id="about-card-name">KIHONG-KIM</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-1uldwhrbdlrhk08ir4byjac5fgduzdgo3mfgffo7ymwfqmekcleegjte7mzu.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>

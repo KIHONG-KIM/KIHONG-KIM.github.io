@@ -1,0 +1,651 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Tech Blog">
+    <title>MainQuest01(1) - 파이썬 은행계좌 만들기! - Tech Blog</title>
+    <meta name="author" content="KIHONG-KIM">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"KIHONG-KIM","sameAs":[]},"articleBody":"은행계좌 만들기!\n\n\n\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119# [메인 퀘스트 1번: 은행계좌 만들기 - 3점]# 에러 클래스 만들기class withdrawError(Exception):    def __init__(self, Exception):        pass# random 모듈 importfrom random import randrange as r# [ Quest ] Q1. Account 클래스 : 은행에 가서 계좌를 개설하면 은행이름, 예금주, 계좌번호, 잔액이 설정됩니다. Account 클래스를 생성한 후# 생성자(hint: 매직매서드..!!)를 구현해보세요. 생성자에서는 예금주와 초기 잔액만 입력 받습니다. 은행이름은 SC은행으로 계좌번호는# 3자리-2자리-6자리 형태로 랜덤하게 생성됩니다. (은행이름: SC은행, 계좌번호: 111-11-111111)class Account:    # Q1 계좌번호 생성기    def createNum(x):        num = &quot;&quot;        for i in range (x):            num += str(r(0,10))        return num    # [ Quest ] Q2 클래스 변수: 클래스 변수를 사용해서 Account 클래스로부터 생성된 계좌 객체의 개수를 저장하세요.    num_accounts = 0    def __init__(self, accHolder, iniBal):        self.accHolder = accHolder        self.balance = iniBal        self.bankName = &quot;SC은행&quot;        self.accNum = f&quot;&#123;Account.createNum(3)&#125;-&#123;Account.createNum(2)&#125;-&#123;Account.createNum(5)&#125;&quot;        self.depositHistory = []        self.withdrawHistory = []        self.deposit_counter = 0        Account.num_accounts += 1    # [ Quest ] Q3. 클래스 변수 출력 : Account 클래스로부터 생성된 계좌의 개수를 출력하는 get_account_num() 메서드를 추가하세요.    def get_account_num(self):        print(f&quot;현재 계좌의 개수는 &#123;Account.num_accounts&#125;개 입니다.&quot;)    # [ Quest ] Q4. 입금 메서드 : Account 클래스에 입금을 위한 deposit 메서드를 추가하세요. 입금은 최소 1원 이상만 가능합니다.    def deposit(self, depositBal):        try:            if depositBal &lt;= 0:                raise Exception(&#x27;입금 금액이 0이거나 0보다 작음&#x27;)                return        except Exception as e:            print(&quot;에러: 입금은 최소 1원 이상만 가능합니다. 원인:&quot;, e)        else:            # 입금처리            self.balance += depositBal            # 거래기록  - [ Quest ] Q10. 입금과 출금 내역이 기록되도록 코드를 업데이트 하세요.            result = f&quot;입금: &#123;depositBal:,&#125;원, 잔액: &#123;self.balance:,&#125;원&quot;            self.depositHistory.append(result)            # 출력            print(result)            # [ Quest ] Q7. 이자 지급하기 : 입금 횟수가 5회가 될 때 잔고를 기준으로 1%의 이자가 잔고에 추가되도록 코드를 변경해보세요.            # 이자처리            self.deposit_counter += 1        # 입금이 1회 추가될 경우, deposit 카운터 1 증가            if self.deposit_counter % 5 == 0:       # 나누었을때, 나머지가 0일 경우 이자 추가                print (f&quot;입금 &#123;self.deposit_counter&#125;회, 이자: &#123;self.balance * 0.01:,&#125;원 입니다.&quot;)                self.balance += self.balance * 0.01     # 기존 잔고의 1% 증액    # [ Quest ] Q5. 출금 메서드 : Account 클래스에 출금을 위한 withdraw 메서드를 추가하세요. 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다.    def withdraw(self, withdrawBal):        # 에러 처리        try:            if withdrawBal &gt; self.balance:                raise Exception(&quot;출금액이 잔고보다 더 많습니다.&quot;)            elif withdrawBal &lt;= 0:                raise withdrawError(&quot;출금액이 0보다 작거나 같습니다.&quot;)        except Exception as e:            print(&quot;에러: 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다. 원인:&quot;, e)        except withdrawError as e:            print(&quot;에러: 0원 이하는 출금할 수 없습니다. 원인:&quot;, e)        else:            # 출금 처리            self.balance -= withdrawBal            result = f&quot;출금: &#123;withdrawBal:,&#125;원, 잔액: &#123;self.balance:,&#125;원&quot;            # 거래 기록            self.withdrawHistory.append(result)            # 출력            print(result)    # [ Quest ] Q6. 정보 출력 메서드 : Account 인스턴스에 저장된 정보를 출력하는 display_info() 메서드를 추가하세요. 잔고는 세자리마다 쉼표를    # 출력하세요.    # (은행이름: SC은행, 예금주: 파이썬, 계좌번호: 111-11-111111, 잔고: 10,000원)    def display_info(self):        return f&quot;은행이름: &#123;self.bankName&#125;, 예금주: &#123;self.accHolder&#125;, 계좌번호: &#123;self.accNum&#125;, 잔고: &#123;self.balance:,&#125;&quot;    # (입금 내역과 출금 내역을 출력하는 deposit_history와 withdraw_history 메서드를 추가하세요.)    # 거래기록 출력 메서드    def deposit_history(self):      # 입금        print(&quot;*&quot;*10, &quot;입금 거래 기록&quot;, &quot;*&quot;*10)        for i in range(len(self.depositHistory)):            print(f&quot;&#123;i&#125;, &#123;self.depositHistory[i]&#125;&quot;)    def withdraw_history(self):     # 출금        print(&quot;*&quot;*10, &quot;출금 거래 기록&quot;, &quot;*&quot;*10)        for i in range(len(self.withdrawHistory)):            print(f&quot;&#123;i&#125;, &#123;self.withdrawHistory[i]&#125;&quot;)# [ Quest ] Q8. 여러 객체 생성 : Account 클래스로부터 3개 이상 인스턴스를 생성하고 생성된 인스턴스를 리스트에 저장해보세요.k = Account(&quot;김씨&quot;, 5000)p = Account(&quot;박씨&quot;, 4000000)s = Account(&quot;심씨&quot;, 10000000)bankCustomer = [k,p,s]\n\n\n1234567k.get_account_num()k.deposit(1000)k.deposit(1000)k.deposit(1000)k.deposit(1000)k.deposit(1000)k.withdraw(100)\n\n현재 계좌의 개수는 3개 입니다.\n입금: 1,000원, 잔액: 6,000원\n입금: 1,000원, 잔액: 7,000원\n입금: 1,000원, 잔액: 8,000원\n입금: 1,000원, 잔액: 9,000원\n입금: 1,000원, 잔액: 10,000원\n입금 5회, 이자: 100.0원 입니다.\n출금: 100원, 잔액: 10,000.0원\n\n123456789# 에러 확인k.deposit(0) # 입금 에러 출력print()k.withdraw(20000) # 잔고보다 출금액이 더 많을때print()k.withdraw(-1) # 0보다 작은 금액을 출금할 때\n\n에러: 입금은 최소 1원 이상만 가능합니다. 원인: 입금 금액이 0이거나 0보다 작음\n\n에러: 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다. 원인: 출금액이 잔고보다 더 많습니다.\n\n에러: 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다. 원인: 출금액이 0보다 작거나 같습니다.\n\n123456print(k.display_info(), &quot;\\n&quot;)k.deposit_history()print()k.withdraw_history()\n\n은행이름: SC은행, 예금주: 김씨, 계좌번호: 052-02-50983, 잔고: 10,000.0 \n\n********** 입금 거래 기록 **********\n0, 입금: 1,000원, 잔액: 6,000원\n1, 입금: 1,000원, 잔액: 7,000원\n2, 입금: 1,000원, 잔액: 8,000원\n3, 입금: 1,000원, 잔액: 9,000원\n4, 입금: 1,000원, 잔액: 10,000원\n\n********** 출금 거래 기록 **********\n0, 출금: 100원, 잔액: 10,000.0원\n\n123# Q9. 객체 순회 반복문을 통해 리스트에 있는 객체를 순회하면서 잔고가 100만원 이상인 고객의 정보만 출력하세요.a = &quot;\\n&quot;.join([x.display_info() for x in bankCustomer if x.balance &gt; 1000000])print(a)\n\n은행이름: SC은행, 예금주: 박씨, 계좌번호: 137-18-62612, 잔고: 4,000,000\n은행이름: SC은행, 예금주: 심씨, 계좌번호: 283-31-82275, 잔고: 10,000,000\n\n","dateCreated":"2024-05-28T00:00:00+09:00","dateModified":"2024-10-07T01:14:08+09:00","datePublished":"2024-05-28T00:00:00+09:00","description":"은행계좌 만들기!","headline":"MainQuest01(1) - 파이썬 은행계좌 만들기!","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"},"publisher":{"@type":"Organization","name":"KIHONG-KIM","sameAs":[]},"url":"https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/","keywords":"Tag"}</script>
+    <meta name="description" content="은행계좌 만들기!">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="MainQuest01(1) - 파이썬 은행계좌 만들기!">
+<meta property="og:url" content="https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/index.html">
+<meta property="og:site_name" content="Tech Blog">
+<meta property="og:description" content="은행계좌 만들기!">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:image" content="https://colab.research.google.com/assets/colab-badge.svg">
+<meta property="article:published_time" content="2024-05-27T15:00:00.000Z">
+<meta property="article:modified_time" content="2024-10-06T16:14:08.408Z">
+<meta property="article:author" content="KIHONG-KIM">
+<meta property="article:tag" content="Tag">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://colab.research.google.com/assets/colab-badge.svg">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-9zeroke2fxhgdngsgodndkdak2ckc2tfmligieutqkwcgkwydxe62exfmarl.min.css">
+
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            Tech Blog
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="카테고리"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">카테고리</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="태그"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">태그</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="아카이브"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">아카이브</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="검색"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">검색</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            MainQuest01(1) - 파이썬 은행계좌 만들기!
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2024-05-28T00:00:00+09:00">
+	
+		    2024/05/28
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/Python/">Python</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>은행계좌 만들기!</p>
+<span id="more"></span>
+
+<p><a href="https://colab.research.google.com/github/KIHONG-KIM/AIFFEL_quest/blob/main/Main_quest/Quest01/MainQuest1.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># [메인 퀘스트 1번: 은행계좌 만들기 - 3점]</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 에러 클래스 만들기</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">withdrawError</span>(<span class="title class_ inherited__">Exception</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, Exception</span>):</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># random 모듈 import</span></span><br><span class="line"><span class="keyword">from</span> random <span class="keyword">import</span> randrange <span class="keyword">as</span> r</span><br><span class="line"></span><br><span class="line"><span class="comment"># [ Quest ] Q1. Account 클래스 : 은행에 가서 계좌를 개설하면 은행이름, 예금주, 계좌번호, 잔액이 설정됩니다. Account 클래스를 생성한 후</span></span><br><span class="line"><span class="comment"># 생성자(hint: 매직매서드..!!)를 구현해보세요. 생성자에서는 예금주와 초기 잔액만 입력 받습니다. 은행이름은 SC은행으로 계좌번호는</span></span><br><span class="line"><span class="comment"># 3자리-2자리-6자리 형태로 랜덤하게 생성됩니다. (은행이름: SC은행, 계좌번호: 111-11-111111)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Account</span>:</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Q1 계좌번호 생성기</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">createNum</span>(<span class="params">x</span>):</span><br><span class="line">        num = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span> (x):</span><br><span class="line">            num += <span class="built_in">str</span>(r(<span class="number">0</span>,<span class="number">10</span>))</span><br><span class="line">        <span class="keyword">return</span> num</span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] Q2 클래스 변수: 클래스 변수를 사용해서 Account 클래스로부터 생성된 계좌 객체의 개수를 저장하세요.</span></span><br><span class="line">    num_accounts = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, accHolder, iniBal</span>):</span><br><span class="line">        <span class="variable language_">self</span>.accHolder = accHolder</span><br><span class="line">        <span class="variable language_">self</span>.balance = iniBal</span><br><span class="line">        <span class="variable language_">self</span>.bankName = <span class="string">&quot;SC은행&quot;</span></span><br><span class="line">        <span class="variable language_">self</span>.accNum = <span class="string">f&quot;<span class="subst">&#123;Account.createNum(<span class="number">3</span>)&#125;</span>-<span class="subst">&#123;Account.createNum(<span class="number">2</span>)&#125;</span>-<span class="subst">&#123;Account.createNum(<span class="number">5</span>)&#125;</span>&quot;</span></span><br><span class="line">        <span class="variable language_">self</span>.depositHistory = []</span><br><span class="line">        <span class="variable language_">self</span>.withdrawHistory = []</span><br><span class="line">        <span class="variable language_">self</span>.deposit_counter = <span class="number">0</span></span><br><span class="line">        Account.num_accounts += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] Q3. 클래스 변수 출력 : Account 클래스로부터 생성된 계좌의 개수를 출력하는 get_account_num() 메서드를 추가하세요.</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">get_account_num</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;현재 계좌의 개수는 <span class="subst">&#123;Account.num_accounts&#125;</span>개 입니다.&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] Q4. 입금 메서드 : Account 클래스에 입금을 위한 deposit 메서드를 추가하세요. 입금은 최소 1원 이상만 가능합니다.</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">deposit</span>(<span class="params">self, depositBal</span>):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">if</span> depositBal &lt;= <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">raise</span> Exception(<span class="string">&#x27;입금 금액이 0이거나 0보다 작음&#x27;</span>)</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;에러: 입금은 최소 1원 이상만 가능합니다. 원인:&quot;</span>, e)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="comment"># 입금처리</span></span><br><span class="line">            <span class="variable language_">self</span>.balance += depositBal</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 거래기록  - [ Quest ] Q10. 입금과 출금 내역이 기록되도록 코드를 업데이트 하세요.</span></span><br><span class="line">            result = <span class="string">f&quot;입금: <span class="subst">&#123;depositBal:,&#125;</span>원, 잔액: <span class="subst">&#123;self.balance:,&#125;</span>원&quot;</span></span><br><span class="line">            <span class="variable language_">self</span>.depositHistory.append(result)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 출력</span></span><br><span class="line">            <span class="built_in">print</span>(result)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># [ Quest ] Q7. 이자 지급하기 : 입금 횟수가 5회가 될 때 잔고를 기준으로 1%의 이자가 잔고에 추가되도록 코드를 변경해보세요.</span></span><br><span class="line">            <span class="comment"># 이자처리</span></span><br><span class="line">            <span class="variable language_">self</span>.deposit_counter += <span class="number">1</span>        <span class="comment"># 입금이 1회 추가될 경우, deposit 카운터 1 증가</span></span><br><span class="line">            <span class="keyword">if</span> <span class="variable language_">self</span>.deposit_counter % <span class="number">5</span> == <span class="number">0</span>:       <span class="comment"># 나누었을때, 나머지가 0일 경우 이자 추가</span></span><br><span class="line">                <span class="built_in">print</span> (<span class="string">f&quot;입금 <span class="subst">&#123;self.deposit_counter&#125;</span>회, 이자: <span class="subst">&#123;self.balance * <span class="number">0.01</span>:,&#125;</span>원 입니다.&quot;</span>)</span><br><span class="line">                <span class="variable language_">self</span>.balance += <span class="variable language_">self</span>.balance * <span class="number">0.01</span>     <span class="comment"># 기존 잔고의 1% 증액</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] Q5. 출금 메서드 : Account 클래스에 출금을 위한 withdraw 메서드를 추가하세요. 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다.</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">withdraw</span>(<span class="params">self, withdrawBal</span>):</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 에러 처리</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">if</span> withdrawBal &gt; <span class="variable language_">self</span>.balance:</span><br><span class="line">                <span class="keyword">raise</span> Exception(<span class="string">&quot;출금액이 잔고보다 더 많습니다.&quot;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">elif</span> withdrawBal &lt;= <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">raise</span> withdrawError(<span class="string">&quot;출금액이 0보다 작거나 같습니다.&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;에러: 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다. 원인:&quot;</span>, e)</span><br><span class="line">        <span class="keyword">except</span> withdrawError <span class="keyword">as</span> e:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;에러: 0원 이하는 출금할 수 없습니다. 원인:&quot;</span>, e)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="comment"># 출금 처리</span></span><br><span class="line">            <span class="variable language_">self</span>.balance -= withdrawBal</span><br><span class="line">            result = <span class="string">f&quot;출금: <span class="subst">&#123;withdrawBal:,&#125;</span>원, 잔액: <span class="subst">&#123;self.balance:,&#125;</span>원&quot;</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 거래 기록</span></span><br><span class="line">            <span class="variable language_">self</span>.withdrawHistory.append(result)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 출력</span></span><br><span class="line">            <span class="built_in">print</span>(result)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># [ Quest ] Q6. 정보 출력 메서드 : Account 인스턴스에 저장된 정보를 출력하는 display_info() 메서드를 추가하세요. 잔고는 세자리마다 쉼표를</span></span><br><span class="line">    <span class="comment"># 출력하세요.</span></span><br><span class="line">    <span class="comment"># (은행이름: SC은행, 예금주: 파이썬, 계좌번호: 111-11-111111, 잔고: 10,000원)</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">display_info</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;은행이름: <span class="subst">&#123;self.bankName&#125;</span>, 예금주: <span class="subst">&#123;self.accHolder&#125;</span>, 계좌번호: <span class="subst">&#123;self.accNum&#125;</span>, 잔고: <span class="subst">&#123;self.balance:,&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># (입금 내역과 출금 내역을 출력하는 deposit_history와 withdraw_history 메서드를 추가하세요.)</span></span><br><span class="line">    <span class="comment"># 거래기록 출력 메서드</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">deposit_history</span>(<span class="params">self</span>):      <span class="comment"># 입금</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;*&quot;</span>*<span class="number">10</span>, <span class="string">&quot;입금 거래 기록&quot;</span>, <span class="string">&quot;*&quot;</span>*<span class="number">10</span>)</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(<span class="variable language_">self</span>.depositHistory)):</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;i&#125;</span>, <span class="subst">&#123;self.depositHistory[i]&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">withdraw_history</span>(<span class="params">self</span>):     <span class="comment"># 출금</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;*&quot;</span>*<span class="number">10</span>, <span class="string">&quot;출금 거래 기록&quot;</span>, <span class="string">&quot;*&quot;</span>*<span class="number">10</span>)</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(<span class="variable language_">self</span>.withdrawHistory)):</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;i&#125;</span>, <span class="subst">&#123;self.withdrawHistory[i]&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># [ Quest ] Q8. 여러 객체 생성 : Account 클래스로부터 3개 이상 인스턴스를 생성하고 생성된 인스턴스를 리스트에 저장해보세요.</span></span><br><span class="line">k = Account(<span class="string">&quot;김씨&quot;</span>, <span class="number">5000</span>)</span><br><span class="line">p = Account(<span class="string">&quot;박씨&quot;</span>, <span class="number">4000000</span>)</span><br><span class="line">s = Account(<span class="string">&quot;심씨&quot;</span>, <span class="number">10000000</span>)</span><br><span class="line"></span><br><span class="line">bankCustomer = [k,p,s]</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">k.get_account_num()</span><br><span class="line">k.deposit(<span class="number">1000</span>)</span><br><span class="line">k.deposit(<span class="number">1000</span>)</span><br><span class="line">k.deposit(<span class="number">1000</span>)</span><br><span class="line">k.deposit(<span class="number">1000</span>)</span><br><span class="line">k.deposit(<span class="number">1000</span>)</span><br><span class="line">k.withdraw(<span class="number">100</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>현재 계좌의 개수는 3개 입니다.
+입금: 1,000원, 잔액: 6,000원
+입금: 1,000원, 잔액: 7,000원
+입금: 1,000원, 잔액: 8,000원
+입금: 1,000원, 잔액: 9,000원
+입금: 1,000원, 잔액: 10,000원
+입금 5회, 이자: 100.0원 입니다.
+출금: 100원, 잔액: 10,000.0원
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 에러 확인</span></span><br><span class="line"></span><br><span class="line">k.deposit(<span class="number">0</span>) <span class="comment"># 입금 에러 출력</span></span><br><span class="line"><span class="built_in">print</span>()</span><br><span class="line"></span><br><span class="line">k.withdraw(<span class="number">20000</span>) <span class="comment"># 잔고보다 출금액이 더 많을때</span></span><br><span class="line"><span class="built_in">print</span>()</span><br><span class="line"></span><br><span class="line">k.withdraw(-<span class="number">1</span>) <span class="comment"># 0보다 작은 금액을 출금할 때</span></span><br></pre></td></tr></table></figure>
+
+<pre><code>에러: 입금은 최소 1원 이상만 가능합니다. 원인: 입금 금액이 0이거나 0보다 작음
+
+에러: 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다. 원인: 출금액이 잔고보다 더 많습니다.
+
+에러: 출금은 계좌의 잔고 이상으로 출금할 수는 없습니다. 원인: 출금액이 0보다 작거나 같습니다.
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(k.display_info(), <span class="string">&quot;\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">k.deposit_history()</span><br><span class="line"><span class="built_in">print</span>()</span><br><span class="line"></span><br><span class="line">k.withdraw_history()</span><br></pre></td></tr></table></figure>
+
+<pre><code>은행이름: SC은행, 예금주: 김씨, 계좌번호: 052-02-50983, 잔고: 10,000.0 
+
+********** 입금 거래 기록 **********
+0, 입금: 1,000원, 잔액: 6,000원
+1, 입금: 1,000원, 잔액: 7,000원
+2, 입금: 1,000원, 잔액: 8,000원
+3, 입금: 1,000원, 잔액: 9,000원
+4, 입금: 1,000원, 잔액: 10,000원
+
+********** 출금 거래 기록 **********
+0, 출금: 100원, 잔액: 10,000.0원
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Q9. 객체 순회 반복문을 통해 리스트에 있는 객체를 순회하면서 잔고가 100만원 이상인 고객의 정보만 출력하세요.</span></span><br><span class="line">a = <span class="string">&quot;\n&quot;</span>.join([x.display_info() <span class="keyword">for</span> x <span class="keyword">in</span> bankCustomer <span class="keyword">if</span> x.balance &gt; <span class="number">1000000</span>])</span><br><span class="line"><span class="built_in">print</span>(a)</span><br></pre></td></tr></table></figure>
+
+<pre><code>은행이름: SC은행, 예금주: 박씨, 계좌번호: 137-18-62612, 잔고: 4,000,000
+은행이름: SC은행, 예금주: 심씨, 계좌번호: 283-31-82275, 잔고: 10,000,000
+</code></pre>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Tag/" rel="tag">Tag</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/06/13/20240613-MainQuest3/"
+                    data-tooltip="MainQuest03 - 포켓몬 데이터 분석"
+                    aria-label="이전: MainQuest03 - 포켓몬 데이터 분석"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/05/28/20240528-MainQuest2/"
+                    data-tooltip="MainQuest01(2) - 아이펠 통합 관리 프로그램"
+                    aria-label="다음: MainQuest01(2) - 아이펠 통합 관리 프로그램"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2024 KIHONG-KIM. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/06/13/20240613-MainQuest3/"
+                    data-tooltip="MainQuest03 - 포켓몬 데이터 분석"
+                    aria-label="이전: MainQuest03 - 포켓몬 데이터 분석"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/05/28/20240528-MainQuest2/"
+                    data-tooltip="MainQuest01(2) - 아이펠 통합 관리 프로그램"
+                    aria-label="다음: MainQuest01(2) - 아이펠 통합 관리 프로그램"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/05/28/20240528-MainQuest1/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <h4 id="about-card-name">KIHONG-KIM</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-1uldwhrbdlrhk08ir4byjac5fgduzdgo3mfgffo7ymwfqmekcleegjte7mzu.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>

@@ -1,0 +1,1005 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Tech Blog">
+    <title>MainQuest04 - CNN 흉부X-ray검사 - Tech Blog</title>
+    <meta name="author" content="KIHONG-KIM">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"KIHONG-KIM","sameAs":[]},"articleBody":"개요흉부 X-ray 촬영 이미지 5216장을 사용해서 데이터를 훈련하여 폐렴인지 아닌지 판단하는 모델 구현\n데이터 증강, 하이퍼 파라미터를 변경, ResNet 모델 구현 및 학습을 진행하면서 결과가 어떻게 달라지는지 확인\n목차\n1. 의료 영상 처리 CNN 베이스 모델 구현\n    1) 데이터 로드\n        tf.io.gfile.glob를 사용하여 학습, 검증, 테스트 데이터 파일 경로를 로드\n        데이터셋을 8:2 비율로 분할 (학습: 80%, 검증: 20%).\n    2) 데이터 전처리\n        파일 경로에서 라벨을 추출\n        이미지를 디코딩하고 크기를 조정\n    3) 데이터셋 생성\n        tf.data.Dataset을 사용하여 데이터셋을 생성하고 전처리 및 데이터 증강을 적용\n\n2. augmentation 기법 사용\n    - 데이터 증강을 적용하여 모델의 일반화 성능을 향상\n3. 모델 구조 변경을 통해 베이스 모델과의 성능비교\n    - 하이퍼파라미터 튜닝을 위해 학습률, 배치 크기 등을 조정 (batch 개수, Epochs 수 조정, 규제 적용)\n4. ResNet 모델 구현 및 학습\n     - ResNet을 구현하고, 모델을 훈련하여 결과를 확인\n\nSummary## 1번째 모델로 테스트 진행\n\n* 모델 환경 : 기본\n    - 데이터 증강 : 하지 않음\n    - BATCH_SIZE = 16\n    - EPOCHS = 10\n    - Optimizer = RMSprop\n\n* 결과\n    - 테스트 데이터로 예측 : 82% 정확도\n    Loss: 0.7411531209945679,\n    Accuracy: 0.8221153616905212,\n    Precision: 0.7841140627861023,\n    Recall: 0.9871794581413269\n\n\n## 2번째 모델 실험 결과\n\n* 모델 환경 : \n    - 기본환경\n    - Augmentation 추가\n\n* 결과\n    - 테스트 데이터로 예측시, 정확도 79.1%\n    Loss: 0.7042645215988159,\n    Accuracy: 0.7916666865348816,\n    Precision: 0.7610442042350769,\n    Recall: 0.971794843673706\n\n\n## 3번째 모델 실험 결과\n\n* 모델 환경 : \n    - Augmentation 제외\n    - BATCH_SIZE = 16 &gt; 8 로 변경\n    - EPOCHS = 10 &gt; 15 로 변경\n    - Optimizer = adam 으로 변경\n\n* 결과\n    - 테스트 데이터로 예측시, 정확도 77.5% \n    Loss: 1.264716386795044,\n    Accuracy: 0.7772436141967773,\n    Precision: 0.7399617433547974,\n    Recall: 0.9923076629638672\n\n\n## 4번째 모델 실험 결과\n\n* 모델 환경 : \n    - 기본환경\n    - class_weight를 설정 제외\n\n* 결과\n    - 테스트 데이터로 예측시, 정확도 79.9% \n    Loss: 0.6984289884567261,\n    Accuracy: 0.7996794581413269,\n    Precision: 0.763419508934021,\n    Recall: 0.9846153855323792\n\n\n## 5번째 모델 실험 결과\n\n* 모델 환경 : \n    - 기본환경\n    - class_weight를 설정 제외\n\n* 결과\n    - 테스트 데이터로 예측시, 정확도 83.9% \n    Loss: 0.4094178378582001,\n    Accuracy: 0.8397436141967773,\n    Precision: 0.8341013789176941,\n    Recall: 0.928205132484436\n\n회고- 기본 베이스모델로 여러번 돌렸는데, 그때 마지막에 높게 나와서 조금 결과가 아쉽다. \n  처음에는 베이스모델이 70%가 나왔는데 생각해보니, 한 cell에서 다 돌려버려서, \n  다시 분할하느라 여러번돌렸음.\n- 생각보다 하이퍼 파라미터, 데이터 증강이 잘 되지 않아서 아쉬움. \n  하이퍼 파라미터를 조금 더 크게하거나, 데이터 증강도 여러가지로 해봤으면 더 좋을 것 같았음.\n- 여러가지 방법으로 해보다가 시간이 많이 걸리기도 하고 되긴되지만, \n  에러와 워닝이 가득뜨고 결과도 이상해서 다시 돌아왔는데 다른 모델을 적용할 때 방법이 무궁무진하다.\n  다시금 기본에 충실해야겠다는 생각을 하게 된다.\n- transfer learning의 효과를 경험하며, 더 잘하면 굉장히 높은 정확도를 달성할 수 있을 것 같다.\n- 배울것들이 많지만, 계속해서 꾸준히 하나하나 늘리면 계속 성장할 수 있을 것 같다. 꾸준한게 중요한듯.\n  이것 저것 하는 것보다 하나라도 제대로 하는게 중요한 것 같다.\n\nreferenceResnet으로 구현\nhttps://www.kaggle.com/code/abhishekdhule/pneumonia-detection-resnet-inception-tensorflow \n\n12345678910111213141516171819202122232425262728293031323334353637383940414243import os, reimport random, mathimport numpy as npimport tensorflow as tfimport matplotlib.pyplot as pltimport warnings warnings.filterwarnings(action=&#x27;ignore&#x27;)# 데이터 읽어오기AUTOTUNE = tf.data.experimental.AUTOTUNE  # 데이터 로드할 때 빠르게 로드할 수 있도록하는 설정 변수IMAGE_SIZE = [180, 180] # X-RAY 이미지 사이즈 변수# 데이터 경로 변수ROOT_PATH = os.path.join(os.getenv(&#x27;HOME&#x27;))TRAIN_PATH = ROOT_PATH + &#x27;/data/train/*/*&#x27;VAL_PATH = ROOT_PATH + &#x27;/data/val/*/*&#x27;TEST_PATH = ROOT_PATH + &#x27;/data/test/*/*&#x27;# tf.io.gfile.glob() 이 함수는 주어진 패턴에 맞는 파일들의 경로를 리스트 형태로 반환train_filenames = tf.io.gfile.glob(TRAIN_PATH)test_filenames = tf.io.gfile.glob(TEST_PATH)val_filenames = tf.io.gfile.glob(VAL_PATH)# train, validation 데이터 합치기filenames = tf.io.gfile.glob(TRAIN_PATH)filenames.extend(tf.io.gfile.glob(VAL_PATH))# 모아진 filenames를 8:2 나누기train_size = math.floor(len(filenames)*0.8) # 80의 비율의 수 math.floor()는 소수점 버리기random.seed(8)random.shuffle(filenames) # random.shuffle로 순서 섞기train_filenames = filenames[:train_size] # 나눈다val_filenames = filenames[train_size:]  # 여기서 맹점은 answer가 랜덤하게 섞여서 한쪽으로 치중될 수 있음.print(&quot;train&quot;,len(train_filenames))print(&quot;valid&quot;,len(val_filenames))print(&quot;test&quot;, len(test_filenames))sum = len(train_filenames) + len(val_filenames)print(&quot;train + val 파일 개수 합계&quot;,sum)print(&quot;train image 개수&quot;, len(train_filenames))print(&quot;valid image 개수&quot;, len(val_filenames))\n\ntrain 4185\nvalid 1047\ntest 624\ntrain + val 파일 개수 합계 5232\ntrain image 개수 4185\nvalid image 개수 1047\n\n1234567891011121314151617181920212223242526272829# print(f&#x27;Normal image path\\n&#123;filenames[0]&#125;&#x27;)# print(f&#x27;Pneumonia image path\\n&#123;filenames[2000]&#125;&#x27;) # 이름을 힌트삼아 라벨링COUNT_NORMAL = len([filename for filename in train_filenames if &quot;NORMAL&quot; in filename]) # # 이거랑 비슷함. 여기서는 배열의 수를 세고 있다.# sum = 0# for name in tran_filenames:#   if &quot;NORMAL&quot; in filename  #       sum += 1# print(sum)print(f&quot;Normal images count in training set: &#123;COUNT_NORMAL&#125;&quot;)# 타겟 수 확인COUNT_PNEUMONIA = len([filename for filename in train_filenames if &quot;PNEUMONIA&quot; in filename])print(f&quot;Pneumonia images count in training set: &#123;COUNT_PNEUMONIA&#125;&quot;)train_list_ds = tf.data.Dataset.from_tensor_slices(train_filenames) # tf.data.Dataset.from_tensor_slices 처음보네val_list_ds = tf.data.Dataset.from_tensor_slices(val_filenames)test_list_ds = tf.data.Dataset.from_tensor_slices(test_filenames)TRAIN_IMG_COUNT = tf.data.experimental.cardinality(train_list_ds).numpy()VAL_IMG_COUNT = tf.data.experimental.cardinality(val_list_ds).numpy()TEST_IMG_COUNT = tf.data.experimental.cardinality(test_list_ds).numpy()print(f&quot;Training images count: &#123;TRAIN_IMG_COUNT&#125;&quot;)print(f&quot;Validating images count: &#123;VAL_IMG_COUNT&#125;&quot;)print(f&quot;TEST images count: &#123;TEST_IMG_COUNT&#125;&quot;)\n\nNormal images count in training set: 1070\nPneumonia images count in training set: 3115\nTraining images count: 4185\nValidating images count: 1047\nTEST images count: 624\n\n1234567891011121314151617181920212223242526272829303132# 라벨링# ***파일 경로의 끝에서 두번째 부분을 확인하면 양성과 음성을 구분***def get_label(file_path):    parts = tf.strings.split(file_path, os.path.sep)    return parts[-2] == &quot;PNEUMONIA&quot;   # 폐렴이면 양성(True), 노말이면 음성(False)# ***이미지를 알맞은 형식으로 변경 ***def decode_img(img):    img = tf.image.decode_jpeg(img, channels=3) # 이미지를 uint8 tensor로 수정    img = tf.image.convert_image_dtype(img, tf.float32) # float32 타입으로 수정    img = tf.image.resize(img, IMAGE_SIZE) # 이미지 사이즈를 IMAGE_SIZE로 수정    return img# ***이미지 파일의 경로를 입력하면 이미지와 라벨을 읽어옵니다.***def process_path(file_path):    label = get_label(file_path) # 라벨 검출    img = tf.io.read_file(file_path) # 이미지 읽기    img = decode_img(img) # 이미지를 알맞은 형식으로 수정    return img, label# num_parallel_calls 파라미터에 위에서 할당한 AUTOTUNE변수를 이용하면 더욱 빠르게 데이터를 처리 가능train_ds = train_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # train data processing# train_ds = train_ds.map(augment, num_parallel_calls=AUTOTUNE)  # 데이터 증강 추가val_ds = val_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # validation data processingtest_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # test data processing# 이미지가 잘 리사이즈 되었는지, 그리고 라벨이 잘 들어가 있는지 확인for image, label in train_ds.take(1):    print(&quot;Image shape: &quot;, image.numpy().shape)    print(&quot;Label: &quot;, label.numpy())\n\nImage shape:  (180, 180, 3)\nLabel:  False\n\n1234567891011121314151617181920212223242526272829303132333435# 데이터 전처리 과정def prepare_for_training(ds, shuffle_buffer_size=1000):    ds = ds.shuffle(buffer_size=shuffle_buffer_size)    ds = ds.repeat()    ds = ds.batch(BATCH_SIZE)    ds = ds.prefetch(buffer_size=AUTOTUNE)    return dsBATCH_SIZE = 16 # 기존 16EPOCHS = 10 # 에포크 10def prepare_for_test(ds):    ds = ds.batch(BATCH_SIZE)    ds = ds.prefetch(buffer_size=AUTOTUNE)    return dstrain_ds = prepare_for_training(train_ds)val_ds = prepare_for_training(val_ds)test_ds = prepare_for_test(test_ds)# 이미지 배치를 입력하면 여러장의 이미지를 보여줍니다.def show_batch(image_batch, label_batch):    plt.figure(figsize=(10,10))    for n in range(BATCH_SIZE):        ax = plt.subplot(4,math.ceil(BATCH_SIZE/4),n+1)        image = np.clip(image_batch[n], 0, 1)  # 이미지를 유효한 범위로 클리핑        plt.imshow(image)        if label_batch[n]:            plt.title(&quot;PNEUMONIA&quot;)        else:            plt.title(&quot;NORMAL&quot;)        plt.axis(&quot;off&quot;)        image_batch, label_batch = next(iter(train_ds))show_batch(image_batch.numpy(), label_batch.numpy())\n\n\n\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546# 모델 직접 만들기def conv_block(filters):    block = tf.keras.Sequential([        tf.keras.layers.SeparableConv2D(filters, 3, activation=&#x27;relu&#x27;, padding=&#x27;same&#x27;),        tf.keras.layers.SeparableConv2D(filters, 3, activation=&#x27;relu&#x27;, padding=&#x27;same&#x27;),        tf.keras.layers.BatchNormalization(),        tf.keras.layers.MaxPool2D()    ])        return blockdef dense_block(units, dropout_rate):    block = tf.keras.Sequential([        tf.keras.layers.Dense(units, activation=&#x27;relu&#x27;),        tf.keras.layers.BatchNormalization(),        tf.keras.layers.Dropout(dropout_rate)    ])        return blockdef build_model():    model = tf.keras.Sequential([        tf.keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3)),                tf.keras.layers.Conv2D(16, 3, activation=&#x27;relu&#x27;, padding=&#x27;same&#x27;),        tf.keras.layers.Conv2D(16, 3, activation=&#x27;relu&#x27;, padding=&#x27;same&#x27;),        tf.keras.layers.MaxPool2D(),                conv_block(32),        conv_block(64),                conv_block(128),        tf.keras.layers.Dropout(0.2),                conv_block(256),        tf.keras.layers.Dropout(0.2),                tf.keras.layers.Flatten(),        dense_block(512, 0.7),        dense_block(128, 0.5),        dense_block(64, 0.3),                tf.keras.layers.Dense(1, activation=&#x27;sigmoid&#x27;)    ])        return model\n\n첫번째 모델 실험1234567891011121314151617181920212223242526272829# 학습시키기 위한 컴파일with tf.device(&#x27;/GPU:0&#x27;):    model1 = build_model()    METRICS = [        &#x27;accuracy&#x27;,        tf.keras.metrics.Precision(name=&#x27;precision&#x27;),        tf.keras.metrics.Recall(name=&#x27;recall&#x27;)    ]    # optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용     model1.compile(        optimizer=&#x27;RMSprop&#x27;,        loss=&#x27;binary_crossentropy&#x27;,        metrics=METRICS    )# BATCH_SIZE, EPOCHSBATCH_SIZE = 16 # 기존 16EPOCHS = 10 # 에포크 10# 가중치 설정 -  전체 개수 * 노멀개수 * 2 weight_for_0 = (1 / COUNT_NORMAL)*(TRAIN_IMG_COUNT)/2.0 # 2를 왜 나눌까? 가중치 합이 1에 가까워지도록 2를 나눈다.weight_for_1 = (1 / COUNT_PNEUMONIA)*(TRAIN_IMG_COUNT)/2.0class_weight = &#123;0: weight_for_0, 1: weight_for_1&#125;print(&#x27;Weight for NORMAL: &#123;:.2f&#125;&#x27;.format(weight_for_0))print(&#x27;Weight for PNEUMONIA: &#123;:.2f&#125;&#x27;.format(weight_for_1))\n\nWeight for NORMAL: 1.96\nWeight for PNEUMONIA: 0.67\n\n123456789with tf.device(&#x27;/GPU:0&#x27;):    history1 = model1.fit(        train_ds,        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,        epochs=EPOCHS,        validation_data=val_ds,        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,        class_weight=class_weight,    )\n\nEpoch 1/10\n261/261 [==============================] - 61s 195ms/step - loss: 0.3939 - accuracy: 0.8094 - precision: 0.9520 - recall: 0.7836 - val_loss: 0.7257 - val_accuracy: 0.7317 - val_precision: 0.7317 - val_recall: 1.0000\nEpoch 2/10\n261/261 [==============================] - 50s 192ms/step - loss: 0.2351 - accuracy: 0.9114 - precision: 0.9692 - recall: 0.9100 - val_loss: 1.4855 - val_accuracy: 0.7346 - val_precision: 0.7346 - val_recall: 1.0000\nEpoch 3/10\n261/261 [==============================] - 51s 194ms/step - loss: 0.1929 - accuracy: 0.9313 - precision: 0.9756 - recall: 0.9306 - val_loss: 0.1036 - val_accuracy: 0.9625 - val_precision: 0.9629 - val_recall: 0.9869\nEpoch 4/10\n261/261 [==============================] - 51s 194ms/step - loss: 0.1908 - accuracy: 0.9389 - precision: 0.9770 - recall: 0.9402 - val_loss: 1.3750 - val_accuracy: 0.7337 - val_precision: 0.7334 - val_recall: 1.0000\nEpoch 5/10\n261/261 [==============================] - 52s 201ms/step - loss: 0.1529 - accuracy: 0.9509 - precision: 0.9833 - recall: 0.9501 - val_loss: 0.2325 - val_accuracy: 0.9308 - val_precision: 0.9957 - val_recall: 0.9094\nEpoch 6/10\n261/261 [==============================] - 53s 205ms/step - loss: 0.1431 - accuracy: 0.9552 - precision: 0.9812 - recall: 0.9582 - val_loss: 0.0749 - val_accuracy: 0.9721 - val_precision: 0.9842 - val_recall: 0.9777\nEpoch 7/10\n261/261 [==============================] - 56s 216ms/step - loss: 0.1366 - accuracy: 0.9591 - precision: 0.9855 - recall: 0.9592 - val_loss: 0.1406 - val_accuracy: 0.9500 - val_precision: 0.9958 - val_recall: 0.9358\nEpoch 8/10\n261/261 [==============================] - 47s 181ms/step - loss: 0.1184 - accuracy: 0.9619 - precision: 0.9858 - recall: 0.9627 - val_loss: 0.0824 - val_accuracy: 0.9712 - val_precision: 0.9919 - val_recall: 0.9685\nEpoch 9/10\n261/261 [==============================] - 49s 188ms/step - loss: 0.1423 - accuracy: 0.9586 - precision: 0.9790 - recall: 0.9648 - val_loss: 0.2291 - val_accuracy: 0.9144 - val_precision: 0.9814 - val_recall: 0.9003\nEpoch 10/10\n261/261 [==============================] - 49s 187ms/step - loss: 0.1215 - accuracy: 0.9583 - precision: 0.9858 - recall: 0.9579 - val_loss: 0.0790 - val_accuracy: 0.9750 - val_precision: 0.9755 - val_recall: 0.9908\n\n12345678910fig, ax = plt.subplots(1, 4, figsize=(20, 3))ax = ax.ravel()for i, met in enumerate([&#x27;precision&#x27;, &#x27;recall&#x27;, &#x27;accuracy&#x27;, &#x27;loss&#x27;]):    ax[i].plot(history1.history[met])    ax[i].plot(history1.history[&#x27;val_&#x27; + met])    ax[i].set_title(&#x27;Model &#123;&#125;&#x27;.format(met))    ax[i].set_xlabel(&#x27;epochs&#x27;)    ax[i].set_ylabel(met)    ax[i].legend([&#x27;train&#x27;, &#x27;val&#x27;])\n\n\n\n12loss, accuracy, precision, recall = model1.evaluate(test_ds)print(f&#x27;Loss: &#123;loss&#125;,\\nAccuracy: &#123;accuracy&#125;,\\nPrecision: &#123;precision&#125;,\\nRecall: &#123;recall&#125;&#x27;)\n\n39/39 [==============================] - 5s 114ms/step - loss: 1.0947 - accuracy: 0.7596 - precision: 0.7247 - recall: 0.9923\nLoss: 1.0947277545928955,\nAccuracy: 0.7596153616905212,\nPrecision: 0.7247191071510315,\nRecall: 0.9923076629638672\n\n1\n\n두번째 실험 - 데이터 증강123456# ***데이터 증강 추가***def augment(image, label):    image = tf.image.random_flip_left_right(image) # 좌우 반전    image = tf.image.random_flip_up_down(image)    # 상하 반전        return image, label\n\n\n12345# 데이터 증강train_ds = train_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # train data processingtrain_ds = train_ds.map(augment, num_parallel_calls=AUTOTUNE)  # 데이터 증강 추가val_ds = val_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # validation data processingtest_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # test data processing\n\n\n1234567# 데이터 전처리train_ds = prepare_for_training(train_ds)val_ds = prepare_for_training(val_ds)test_ds = prepare_for_test(test_ds)image_batch, label_batch = next(iter(train_ds))show_batch(image_batch.numpy(), label_batch.numpy())\n\n\n\n123456789101112131415161718192021222324252627282930# 학습시키기 위한 컴파일with tf.device(&#x27;/GPU:0&#x27;):    model2 = build_model()    METRICS = [        &#x27;accuracy&#x27;,        tf.keras.metrics.Precision(name=&#x27;precision&#x27;),        tf.keras.metrics.Recall(name=&#x27;recall&#x27;)    ]    # optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용     model2.compile(        optimizer=&#x27;RMSprop&#x27;,        loss=&#x27;binary_crossentropy&#x27;,        metrics=METRICS    )# BATCH_SIZE, EPOCHSBATCH_SIZE = 16 # 기존 16EPOCHS = 10 # 에포크 10# 가중치 설정 -  전체 개수 * 노멀개수 * 2 weight_for_0 = (1 / COUNT_NORMAL)*(TRAIN_IMG_COUNT)/2.0weight_for_1 = (1 / COUNT_PNEUMONIA)*(TRAIN_IMG_COUNT)/2.0class_weight = &#123;0: weight_for_0, 1: weight_for_1&#125;print(&#x27;Weight for NORMAL: &#123;:.2f&#125;&#x27;.format(weight_for_0))print(&#x27;Weight for PNEUMONIA: &#123;:.2f&#125;&#x27;.format(weight_for_1))COUNT_NORMAL + COUNT_PNEUMONIA, TRAIN_IMG_COUNT, weight_for_0 + weight_for_1 , COUNT_PNEUMONIA/COUNT_NORMAL\n\nWeight for NORMAL: 1.96\nWeight for PNEUMONIA: 0.67\n\n\n\n\n\n(4185, 4185, 2.627357075351405, 2.911214953271028)\n\n123456789with tf.device(&#x27;/GPU:0&#x27;):    history2 = model2.fit(        train_ds,        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,        epochs=EPOCHS,        validation_data=val_ds,        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,        class_weight=class_weight,    )\n\nEpoch 1/10\n261/261 [==============================] - 64s 205ms/step - loss: 0.5470 - accuracy: 0.7189 - precision: 0.9129 - recall: 0.6879 - val_loss: 0.5958 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000\nEpoch 2/10\n261/261 [==============================] - 53s 204ms/step - loss: 0.3430 - accuracy: 0.8546 - precision: 0.9596 - recall: 0.8401 - val_loss: 0.5187 - val_accuracy: 0.8442 - val_precision: 0.9950 - val_recall: 0.7913\nEpoch 3/10\n261/261 [==============================] - 53s 202ms/step - loss: 0.2776 - accuracy: 0.8954 - precision: 0.9665 - recall: 0.8904 - val_loss: 0.2264 - val_accuracy: 0.9163 - val_precision: 0.9760 - val_recall: 0.9081\nEpoch 4/10\n261/261 [==============================] - 53s 204ms/step - loss: 0.2818 - accuracy: 0.8903 - precision: 0.9639 - recall: 0.8856 - val_loss: 0.1830 - val_accuracy: 0.9375 - val_precision: 0.9703 - val_recall: 0.9435\nEpoch 5/10\n261/261 [==============================] - 53s 204ms/step - loss: 0.2356 - accuracy: 0.9073 - precision: 0.9696 - recall: 0.9038 - val_loss: 0.2102 - val_accuracy: 0.9212 - val_precision: 0.9899 - val_recall: 0.9016\nEpoch 6/10\n261/261 [==============================] - 55s 210ms/step - loss: 0.2231 - accuracy: 0.9193 - precision: 0.9737 - recall: 0.9164 - val_loss: 0.2792 - val_accuracy: 0.8740 - val_precision: 0.9984 - val_recall: 0.8296\nEpoch 7/10\n261/261 [==============================] - 57s 221ms/step - loss: 0.2010 - accuracy: 0.9253 - precision: 0.9752 - recall: 0.9232 - val_loss: 0.4176 - val_accuracy: 0.8202 - val_precision: 0.8042 - val_recall: 0.9987\nEpoch 8/10\n261/261 [==============================] - 50s 192ms/step - loss: 0.1914 - accuracy: 0.9322 - precision: 0.9767 - recall: 0.9310 - val_loss: 0.1475 - val_accuracy: 0.9500 - val_precision: 0.9449 - val_recall: 0.9895\nEpoch 9/10\n261/261 [==============================] - 50s 194ms/step - loss: 0.1879 - accuracy: 0.9341 - precision: 0.9779 - recall: 0.9331 - val_loss: 0.1079 - val_accuracy: 0.9567 - val_precision: 0.9638 - val_recall: 0.9777\nEpoch 10/10\n261/261 [==============================] - 49s 186ms/step - loss: 0.1742 - accuracy: 0.9423 - precision: 0.9785 - recall: 0.9428 - val_loss: 0.1254 - val_accuracy: 0.9596 - val_precision: 0.9712 - val_recall: 0.9738\n\n12345678910fig, ax = plt.subplots(1, 4, figsize=(20, 3))ax = ax.ravel()for i, met in enumerate([&#x27;precision&#x27;, &#x27;recall&#x27;, &#x27;accuracy&#x27;, &#x27;loss&#x27;]):    ax[i].plot(history2.history[met])    ax[i].plot(history2.history[&#x27;val_&#x27; + met])    ax[i].set_title(&#x27;Model &#123;&#125;&#x27;.format(met))    ax[i].set_xlabel(&#x27;epochs&#x27;)    ax[i].set_ylabel(met)    ax[i].legend([&#x27;train&#x27;, &#x27;val&#x27;])\n\n\n\n12loss, accuracy, precision, recall = model2.evaluate(test_ds)print(f&#x27;Loss: &#123;loss&#125;,\\nAccuracy: &#123;accuracy&#125;,\\nPrecision: &#123;precision&#125;,\\nRecall: &#123;recall&#125;&#x27;)\n\n39/39 [==============================] - 4s 102ms/step - loss: 0.9548 - accuracy: 0.7436 - precision: 0.7130 - recall: 0.9872\nLoss: 0.9548077583312988,\nAccuracy: 0.7435897588729858,\nPrecision: 0.7129629850387573,\nRecall: 0.9871794581413269\n\n1\n\n세번째 실험 - 하이퍼 파라미터 수정1234# 데이터 증강 제외train_ds = train_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # train data processingval_ds = val_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # validation data processingtest_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE) # test data processing\n\n\n123train_ds = prepare_for_training(train_ds)val_ds = prepare_for_training(val_ds)test_ds = prepare_for_test(test_ds)\n\n\n123456789101112131415161718192021222324252627282930# 학습시키기 위한 컴파일with tf.device(&#x27;/GPU:0&#x27;):    model3 = build_model()    METRICS = [        &#x27;accuracy&#x27;,        tf.keras.metrics.Precision(name=&#x27;precision&#x27;),        tf.keras.metrics.Recall(name=&#x27;recall&#x27;)    ]    # optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용     model3.compile(        optimizer=&#x27;adam&#x27;,        loss=&#x27;binary_crossentropy&#x27;,        metrics=METRICS    )# BATCH_SIZE, EPOCHSBATCH_SIZE = 8 # 기존 16EPOCHS = 15 # 에포크 10# 가중치 설정 -  전체 개수 * 노멀개수 * 2 weight_for_0 = (1 / COUNT_NORMAL)*(TRAIN_IMG_COUNT)/2.0 # 2를 왜 나눌까? 가중치 합이 1에 가까워지도록 2를 나눈다.weight_for_1 = (1 / COUNT_PNEUMONIA)*(TRAIN_IMG_COUNT)/2.0class_weight = &#123;0: weight_for_0, 1: weight_for_1&#125;print(&#x27;Weight for NORMAL: &#123;:.2f&#125;&#x27;.format(weight_for_0))print(&#x27;Weight for PNEUMONIA: &#123;:.2f&#125;&#x27;.format(weight_for_1))COUNT_NORMAL + COUNT_PNEUMONIA, TRAIN_IMG_COUNT, weight_for_0 + weight_for_1 , COUNT_PNEUMONIA/COUNT_NORMAL\n\nWeight for NORMAL: 1.96\nWeight for PNEUMONIA: 0.67\n\n\n\n\n\n(4185, 4185, 2.627357075351405, 2.911214953271028)\n\n123456789with tf.device(&#x27;/GPU:0&#x27;):    history3 = model3.fit(        train_ds,        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,        epochs=EPOCHS,        validation_data=val_ds,        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,        class_weight=class_weight,    )\n\nEpoch 1/15\n523/523 [==============================] - 105s 183ms/step - loss: 0.3535 - accuracy: 0.8371 - precision: 0.9527 - recall: 0.8219 - val_loss: 1.4368 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000\nEpoch 2/15\n523/523 [==============================] - 95s 182ms/step - loss: 0.1993 - accuracy: 0.9301 - precision: 0.9751 - recall: 0.9298 - val_loss: 0.1533 - val_accuracy: 0.9370 - val_precision: 0.9286 - val_recall: 0.9902\nEpoch 3/15\n523/523 [==============================] - 95s 182ms/step - loss: 0.1661 - accuracy: 0.9401 - precision: 0.9809 - recall: 0.9379 - val_loss: 0.0792 - val_accuracy: 0.9673 - val_precision: 0.9790 - val_recall: 0.9764\nEpoch 4/15\n523/523 [==============================] - 94s 180ms/step - loss: 0.1528 - accuracy: 0.9425 - precision: 0.9824 - recall: 0.9396 - val_loss: 0.2509 - val_accuracy: 0.9192 - val_precision: 0.9985 - val_recall: 0.8911\nEpoch 5/15\n523/523 [==============================] - 97s 185ms/step - loss: 0.1278 - accuracy: 0.9536 - precision: 0.9862 - recall: 0.9510 - val_loss: 0.0669 - val_accuracy: 0.9740 - val_precision: 0.9907 - val_recall: 0.9739\nEpoch 6/15\n523/523 [==============================] - 97s 186ms/step - loss: 0.1259 - accuracy: 0.9532 - precision: 0.9860 - recall: 0.9506 - val_loss: 0.0767 - val_accuracy: 0.9726 - val_precision: 0.9854 - val_recall: 0.9770\nEpoch 7/15\n523/523 [==============================] - 99s 190ms/step - loss: 0.1053 - accuracy: 0.9614 - precision: 0.9907 - recall: 0.9571 - val_loss: 0.0831 - val_accuracy: 0.9702 - val_precision: 0.9716 - val_recall: 0.9882\nEpoch 8/15\n523/523 [==============================] - 99s 189ms/step - loss: 0.0951 - accuracy: 0.9665 - precision: 0.9919 - recall: 0.9629 - val_loss: 0.0876 - val_accuracy: 0.9654 - val_precision: 0.9932 - val_recall: 0.9594\nEpoch 9/15\n523/523 [==============================] - 93s 177ms/step - loss: 0.0983 - accuracy: 0.9639 - precision: 0.9912 - recall: 0.9600 - val_loss: 0.0735 - val_accuracy: 0.9712 - val_precision: 0.9906 - val_recall: 0.9699\nEpoch 10/15\n523/523 [==============================] - 90s 173ms/step - loss: 0.0958 - accuracy: 0.9653 - precision: 0.9904 - recall: 0.9628 - val_loss: 1.7872 - val_accuracy: 0.7365 - val_precision: 0.7355 - val_recall: 1.0000\nEpoch 11/15\n523/523 [==============================] - 92s 177ms/step - loss: 0.0775 - accuracy: 0.9717 - precision: 0.9944 - recall: 0.9674 - val_loss: 0.2469 - val_accuracy: 0.9187 - val_precision: 0.9985 - val_recall: 0.8903\nEpoch 12/15\n523/523 [==============================] - 92s 175ms/step - loss: 0.0776 - accuracy: 0.9713 - precision: 0.9936 - recall: 0.9677 - val_loss: 0.0796 - val_accuracy: 0.9760 - val_precision: 0.9793 - val_recall: 0.9882\nEpoch 13/15\n523/523 [==============================] - 90s 172ms/step - loss: 0.0627 - accuracy: 0.9760 - precision: 0.9941 - recall: 0.9735 - val_loss: 0.0712 - val_accuracy: 0.9760 - val_precision: 0.9743 - val_recall: 0.9934\nEpoch 14/15\n523/523 [==============================] - 91s 174ms/step - loss: 0.0819 - accuracy: 0.9707 - precision: 0.9931 - recall: 0.9674 - val_loss: 0.0666 - val_accuracy: 0.9769 - val_precision: 0.9868 - val_recall: 0.9816\nEpoch 15/15\n523/523 [==============================] - 90s 172ms/step - loss: 0.0561 - accuracy: 0.9793 - precision: 0.9948 - recall: 0.9774 - val_loss: 0.0564 - val_accuracy: 0.9760 - val_precision: 0.9894 - val_recall: 0.9777\n\n12345678910fig, ax = plt.subplots(1, 4, figsize=(20, 3))ax = ax.ravel()for i, met in enumerate([&#x27;precision&#x27;, &#x27;recall&#x27;, &#x27;accuracy&#x27;, &#x27;loss&#x27;]):    ax[i].plot(history3.history[met])    ax[i].plot(history3.history[&#x27;val_&#x27; + met])    ax[i].set_title(&#x27;Model &#123;&#125;&#x27;.format(met))    ax[i].set_xlabel(&#x27;epochs&#x27;)    ax[i].set_ylabel(met)    ax[i].legend([&#x27;train&#x27;, &#x27;val&#x27;])\n\n\n\n12loss, accuracy, precision, recall = model3.evaluate(test_ds)print(f&#x27;Loss: &#123;loss&#125;,\\nAccuracy: &#123;accuracy&#125;,\\nPrecision: &#123;precision&#125;,\\nRecall: &#123;recall&#125;&#x27;)\n\n39/39 [==============================] - 4s 108ms/step - loss: 1.2647 - accuracy: 0.7772 - precision: 0.7400 - recall: 0.9923\nLoss: 1.264716386795044,\nAccuracy: 0.7772436141967773,\nPrecision: 0.7399617433547974,\nRecall: 0.9923076629638672\n\n1\n\n\n1\n\n4번째 - 가중치 제거시 어떻게될까?1234567891011121314151617181920# 학습시키기 위한 컴파일with tf.device(&#x27;/GPU:0&#x27;):    model4 = build_model()    METRICS = [        &#x27;accuracy&#x27;,        tf.keras.metrics.Precision(name=&#x27;precision&#x27;),        tf.keras.metrics.Recall(name=&#x27;recall&#x27;)    ]    # optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용     model4.compile(        optimizer=&#x27;RMSprop&#x27;,        loss=&#x27;binary_crossentropy&#x27;,        metrics=METRICS    )# BATCH_SIZE, EPOCHSBATCH_SIZE = 16 # 기존 16EPOCHS = 10 # 에포크 10\n\nWeight for NORMAL: 1.96\nWeight for PNEUMONIA: 0.67\n\n\n\n\n\n(4185, 4185, 2.627357075351405, 2.911214953271028)\n\n123456789with tf.device(&#x27;/GPU:0&#x27;):    history4 = model4.fit(        train_ds,        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,        epochs=EPOCHS,        validation_data=val_ds,        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,        # class_weight=class_weight,    )\n\nEpoch 1/10\n261/261 [==============================] - 61s 196ms/step - loss: 0.3570 - accuracy: 0.8568 - precision: 0.9377 - recall: 0.8653 - val_loss: 0.9739 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000\nEpoch 2/10\n261/261 [==============================] - 51s 197ms/step - loss: 0.2024 - accuracy: 0.9301 - precision: 0.9486 - recall: 0.9578 - val_loss: 1.5693 - val_accuracy: 0.7337 - val_precision: 0.7337 - val_recall: 1.0000\nEpoch 3/10\n261/261 [==============================] - 52s 198ms/step - loss: 0.1726 - accuracy: 0.9428 - precision: 0.9596 - recall: 0.9637 - val_loss: 0.1951 - val_accuracy: 0.9135 - val_precision: 0.8985 - val_recall: 0.9948\nEpoch 4/10\n261/261 [==============================] - 52s 200ms/step - loss: 0.1619 - accuracy: 0.9471 - precision: 0.9614 - recall: 0.9678 - val_loss: 1.4994 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000\nEpoch 5/10\n261/261 [==============================] - 52s 201ms/step - loss: 0.1628 - accuracy: 0.9454 - precision: 0.9643 - recall: 0.9624 - val_loss: 0.1149 - val_accuracy: 0.9567 - val_precision: 0.9465 - val_recall: 0.9974\nEpoch 6/10\n261/261 [==============================] - 54s 206ms/step - loss: 0.1351 - accuracy: 0.9555 - precision: 0.9689 - recall: 0.9713 - val_loss: 0.2684 - val_accuracy: 0.9038 - val_precision: 0.8853 - val_recall: 0.9987\nEpoch 7/10\n261/261 [==============================] - 55s 213ms/step - loss: 0.1226 - accuracy: 0.9602 - precision: 0.9742 - recall: 0.9723 - val_loss: 0.0957 - val_accuracy: 0.9644 - val_precision: 0.9572 - val_recall: 0.9961\nEpoch 8/10\n261/261 [==============================] - 48s 182ms/step - loss: 0.1121 - accuracy: 0.9641 - precision: 0.9777 - recall: 0.9740 - val_loss: 0.3674 - val_accuracy: 0.8500 - val_precision: 0.8315 - val_recall: 0.9974\nEpoch 9/10\n261/261 [==============================] - 49s 187ms/step - loss: 0.1173 - accuracy: 0.9588 - precision: 0.9741 - recall: 0.9704 - val_loss: 0.0868 - val_accuracy: 0.9702 - val_precision: 0.9815 - val_recall: 0.9777\nEpoch 10/10\n261/261 [==============================] - 47s 179ms/step - loss: 0.0968 - accuracy: 0.9686 - precision: 0.9807 - recall: 0.9772 - val_loss: 0.0856 - val_accuracy: 0.9692 - val_precision: 0.9841 - val_recall: 0.9737\n\n12345678910fig, ax = plt.subplots(1, 4, figsize=(20, 3))ax = ax.ravel()for i, met in enumerate([&#x27;precision&#x27;, &#x27;recall&#x27;, &#x27;accuracy&#x27;, &#x27;loss&#x27;]):    ax[i].plot(history4.history[met])    ax[i].plot(history4.history[&#x27;val_&#x27; + met])    ax[i].set_title(&#x27;Model &#123;&#125;&#x27;.format(met))    ax[i].set_xlabel(&#x27;epochs&#x27;)    ax[i].set_ylabel(met)    ax[i].legend([&#x27;train&#x27;, &#x27;val&#x27;])\n\n\n\n12loss, accuracy, precision, recall = model4.evaluate(test_ds)print(f&#x27;Loss: &#123;loss&#125;,\\nAccuracy: &#123;accuracy&#125;,\\nPrecision: &#123;precision&#125;,\\nRecall: &#123;recall&#125;&#x27;)\n\n39/39 [==============================] - 4s 109ms/step - loss: 0.6984 - accuracy: 0.7997 - precision: 0.7634 - recall: 0.9846\nLoss: 0.6984289884567261,\nAccuracy: 0.7996794581413269,\nPrecision: 0.763419508934021,\nRecall: 0.9846153855323792\n\n1\n\n5번째123from tensorflow.keras.applications.resnet50 import ResNet50from tensorflow.keras.optimizers import RMSprop,Adam\n\n\n1234567891011121314151617181920212223242526272829303132333435pretrained_model = ResNet50(weights= &#x27;imagenet&#x27;, include_top=False, input_shape= (180,180,3))# layer freezing시키기for layers in pretrained_model.layers:    layers.trainable = False    # last_layer = pretrained_model.get_layer(&#x27;conv5_block3_1_relu&#x27;)last_output = last_layer.outputx=tf.keras.layers.Flatten()(last_output)x=tf.keras.layers.Dense(1024,activation=&#x27;relu&#x27;)(x)x=tf.keras.layers.Dropout(0.2)(x)x=tf.keras.layers.Dense(256,activation=&#x27;relu&#x27;)(x)x=tf.keras.layers.Dropout(0.2)(x)x=tf.keras.layers.Dense(1,activation=&#x27;sigmoid&#x27;)(x)model5=tf.keras.Model(pretrained_model.input,x)model5.compile(optimizer=RMSprop(lr=0.001),              loss=&#x27;binary_crossentropy&#x27;,               metrics=[&#x27;accuracy&#x27;,&#x27;Precision&#x27;,&#x27;Recall&#x27;])BATCH_SIZE = 16 # 기존 16EPOCHS = 10 # 에포크 10with tf.device(&#x27;/GPU:0&#x27;):    history5 = model5.fit(        train_ds,        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,        epochs=EPOCHS,        validation_data=val_ds,        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,        class_weight=class_weight,    )\n\nDownloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5\n94773248/94765736 [==============================] - 0s 0us/step\n94781440/94765736 [==============================] - 0s 0us/step\nEpoch 1/10\n261/261 [==============================] - 63s 197ms/step - loss: 0.8281 - accuracy: 0.5663 - precision: 0.7847 - recall: 0.5748 - val_loss: 0.5007 - val_accuracy: 0.8308 - val_precision: 0.8522 - val_recall: 0.9304\nEpoch 2/10\n261/261 [==============================] - 51s 196ms/step - loss: 0.5116 - accuracy: 0.7428 - precision: 0.8999 - recall: 0.7368 - val_loss: 0.2967 - val_accuracy: 0.8750 - val_precision: 0.9321 - val_recall: 0.8956\nEpoch 3/10\n261/261 [==============================] - 50s 190ms/step - loss: 0.4165 - accuracy: 0.8000 - precision: 0.9319 - recall: 0.7889 - val_loss: 0.2597 - val_accuracy: 0.8875 - val_precision: 0.9523 - val_recall: 0.8911\nEpoch 4/10\n261/261 [==============================] - 52s 200ms/step - loss: 0.3895 - accuracy: 0.8161 - precision: 0.9444 - recall: 0.7995 - val_loss: 0.2842 - val_accuracy: 0.8654 - val_precision: 0.9785 - val_recall: 0.8349\nEpoch 5/10\n261/261 [==============================] - 52s 201ms/step - loss: 0.3707 - accuracy: 0.8218 - precision: 0.9424 - recall: 0.8104 - val_loss: 0.2724 - val_accuracy: 0.8702 - val_precision: 0.9772 - val_recall: 0.8425\nEpoch 6/10\n261/261 [==============================] - 54s 207ms/step - loss: 0.3463 - accuracy: 0.8372 - precision: 0.9482 - recall: 0.8261 - val_loss: 0.2136 - val_accuracy: 0.9048 - val_precision: 0.9689 - val_recall: 0.8990\nEpoch 7/10\n261/261 [==============================] - 48s 183ms/step - loss: 0.3200 - accuracy: 0.8573 - precision: 0.9577 - recall: 0.8455 - val_loss: 0.2679 - val_accuracy: 0.8731 - val_precision: 0.9817 - val_recall: 0.8429\nEpoch 8/10\n261/261 [==============================] - 46s 175ms/step - loss: 0.3210 - accuracy: 0.8566 - precision: 0.9525 - recall: 0.8500 - val_loss: 0.1881 - val_accuracy: 0.9269 - val_precision: 0.9587 - val_recall: 0.9412\nEpoch 9/10\n261/261 [==============================] - 48s 185ms/step - loss: 0.3094 - accuracy: 0.8597 - precision: 0.9532 - recall: 0.8532 - val_loss: 0.4380 - val_accuracy: 0.7875 - val_precision: 0.9964 - val_recall: 0.7137\nEpoch 10/10\n261/261 [==============================] - 47s 181ms/step - loss: 0.2815 - accuracy: 0.8822 - precision: 0.9643 - recall: 0.8745 - val_loss: 0.2010 - val_accuracy: 0.9135 - val_precision: 0.9828 - val_recall: 0.8978\n\n1234567891011121314fig, ax = plt.subplots(1, 4, figsize=(20, 3))ax = ax.ravel()for i, met in enumerate([&#x27;precision&#x27;, &#x27;recall&#x27;, &#x27;accuracy&#x27;, &#x27;loss&#x27;]):    ax[i].plot(history5.history[met])    ax[i].plot(history5.history[&#x27;val_&#x27; + met])    ax[i].set_title(&#x27;Model &#123;&#125;&#x27;.format(met))    ax[i].set_xlabel(&#x27;epochs&#x27;)    ax[i].set_ylabel(met)    ax[i].legend([&#x27;train&#x27;, &#x27;val&#x27;])loss, accuracy, precision, recall = model5.evaluate(test_ds)print(f&#x27;Loss: &#123;loss&#125;,\\nAccuracy: &#123;accuracy&#125;,\\nPrecision: &#123;precision&#125;,\\nRecall: &#123;recall&#125;&#x27;)\n\n39/39 [==============================] - 5s 118ms/step - loss: 0.4094 - accuracy: 0.8397 - precision: 0.8341 - recall: 0.9282\nLoss: 0.4094178378582001,\nAccuracy: 0.8397436141967773,\nPrecision: 0.8341013789176941,\nRecall: 0.928205132484436\n\n\n1\n\n\n1\n","dateCreated":"2024-06-13T00:00:00+09:00","dateModified":"2024-10-07T01:10:45+09:00","datePublished":"2024-06-13T00:00:00+09:00","description":"개요흉부 X-ray 촬영 이미지 5216장을 사용해서 데이터를 훈련하여 폐렴인지 아닌지 판단하는 모델 구현\n데이터 증강, 하이퍼 파라미터를 변경, ResNet 모델 구현 및 학습을 진행하면서 결과가 어떻게 달라지는지 확인\n목차","headline":"MainQuest04 - CNN 흉부X-ray검사","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"},"publisher":{"@type":"Organization","name":"KIHONG-KIM","sameAs":[]},"url":"https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/","keywords":"Tag"}</script>
+    <meta name="description" content="개요흉부 X-ray 촬영 이미지 5216장을 사용해서 데이터를 훈련하여 폐렴인지 아닌지 판단하는 모델 구현 데이터 증강, 하이퍼 파라미터를 변경, ResNet 모델 구현 및 학습을 진행하면서 결과가 어떻게 달라지는지 확인 목차">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="MainQuest04 - CNN 흉부X-ray검사">
+<meta property="og:url" content="https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/index.html">
+<meta property="og:site_name" content="Tech Blog">
+<meta property="og:description" content="개요흉부 X-ray 촬영 이미지 5216장을 사용해서 데이터를 훈련하여 폐렴인지 아닌지 판단하는 모델 구현 데이터 증강, 하이퍼 파라미터를 변경, ResNet 모델 구현 및 학습을 진행하면서 결과가 어떻게 달라지는지 확인 목차">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_5_0.png">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_10_0.png">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_16_0.png">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_19_0.png">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_27_0.png">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_34_0.png">
+<meta property="og:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_40_1.png">
+<meta property="article:published_time" content="2024-06-12T15:00:00.000Z">
+<meta property="article:modified_time" content="2024-10-06T16:10:45.769Z">
+<meta property="article:author" content="KIHONG-KIM">
+<meta property="article:tag" content="Tag">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kihong-kim.github.io/MainQuest4_files/MainQuest4_5_0.png">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-9zeroke2fxhgdngsgodndkdak2ckc2tfmligieutqkwcgkwydxe62exfmarl.min.css">
+
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            Tech Blog
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="카테고리"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">카테고리</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="태그"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">태그</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="아카이브"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">아카이브</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="검색"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">검색</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            MainQuest04 - CNN 흉부X-ray검사
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2024-06-13T00:00:00+09:00">
+	
+		    2024/06/13
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/CNN/">CNN</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <h1 id="개요"><a href="#개요" class="headerlink" title="개요"></a>개요</h1><p>흉부 X-ray 촬영 이미지 5216장을 사용해서 데이터를 훈련하여 폐렴인지 아닌지 판단하는 모델 구현</p>
+<p>데이터 증강, 하이퍼 파라미터를 변경, ResNet 모델 구현 및 학습을 진행하면서 결과가 어떻게 달라지는지 확인</p>
+<h1 id="목차"><a href="#목차" class="headerlink" title="목차"></a>목차</h1><span id="more"></span>
+<pre><code>1. 의료 영상 처리 CNN 베이스 모델 구현
+    1) 데이터 로드
+        tf.io.gfile.glob를 사용하여 학습, 검증, 테스트 데이터 파일 경로를 로드
+        데이터셋을 8:2 비율로 분할 (학습: 80%, 검증: 20%).
+    2) 데이터 전처리
+        파일 경로에서 라벨을 추출
+        이미지를 디코딩하고 크기를 조정
+    3) 데이터셋 생성
+        tf.data.Dataset을 사용하여 데이터셋을 생성하고 전처리 및 데이터 증강을 적용
+
+2. augmentation 기법 사용
+    - 데이터 증강을 적용하여 모델의 일반화 성능을 향상
+3. 모델 구조 변경을 통해 베이스 모델과의 성능비교
+    - 하이퍼파라미터 튜닝을 위해 학습률, 배치 크기 등을 조정 (batch 개수, Epochs 수 조정, 규제 적용)
+4. ResNet 모델 구현 및 학습
+     - ResNet을 구현하고, 모델을 훈련하여 결과를 확인
+</code></pre>
+<h1 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h1><pre><code>## 1번째 모델로 테스트 진행
+
+* 모델 환경 : 기본
+    - 데이터 증강 : 하지 않음
+    - BATCH_SIZE = 16
+    - EPOCHS = 10
+    - Optimizer = RMSprop
+
+* 결과
+    - 테스트 데이터로 예측 : 82% 정확도
+    Loss: 0.7411531209945679,
+    Accuracy: 0.8221153616905212,
+    Precision: 0.7841140627861023,
+    Recall: 0.9871794581413269
+
+
+## 2번째 모델 실험 결과
+
+* 모델 환경 : 
+    - 기본환경
+    - Augmentation 추가
+
+* 결과
+    - 테스트 데이터로 예측시, 정확도 79.1%
+    Loss: 0.7042645215988159,
+    Accuracy: 0.7916666865348816,
+    Precision: 0.7610442042350769,
+    Recall: 0.971794843673706
+
+
+## 3번째 모델 실험 결과
+
+* 모델 환경 : 
+    - Augmentation 제외
+    - BATCH_SIZE = 16 &gt; 8 로 변경
+    - EPOCHS = 10 &gt; 15 로 변경
+    - Optimizer = adam 으로 변경
+
+* 결과
+    - 테스트 데이터로 예측시, 정확도 77.5% 
+    Loss: 1.264716386795044,
+    Accuracy: 0.7772436141967773,
+    Precision: 0.7399617433547974,
+    Recall: 0.9923076629638672
+
+
+## 4번째 모델 실험 결과
+
+* 모델 환경 : 
+    - 기본환경
+    - class_weight를 설정 제외
+
+* 결과
+    - 테스트 데이터로 예측시, 정확도 79.9% 
+    Loss: 0.6984289884567261,
+    Accuracy: 0.7996794581413269,
+    Precision: 0.763419508934021,
+    Recall: 0.9846153855323792
+
+
+## 5번째 모델 실험 결과
+
+* 모델 환경 : 
+    - 기본환경
+    - class_weight를 설정 제외
+
+* 결과
+    - 테스트 데이터로 예측시, 정확도 83.9% 
+    Loss: 0.4094178378582001,
+    Accuracy: 0.8397436141967773,
+    Precision: 0.8341013789176941,
+    Recall: 0.928205132484436
+</code></pre>
+<h1 id="회고"><a href="#회고" class="headerlink" title="회고"></a>회고</h1><pre><code>- 기본 베이스모델로 여러번 돌렸는데, 그때 마지막에 높게 나와서 조금 결과가 아쉽다. 
+  처음에는 베이스모델이 70%가 나왔는데 생각해보니, 한 cell에서 다 돌려버려서, 
+  다시 분할하느라 여러번돌렸음.
+- 생각보다 하이퍼 파라미터, 데이터 증강이 잘 되지 않아서 아쉬움. 
+  하이퍼 파라미터를 조금 더 크게하거나, 데이터 증강도 여러가지로 해봤으면 더 좋을 것 같았음.
+- 여러가지 방법으로 해보다가 시간이 많이 걸리기도 하고 되긴되지만, 
+  에러와 워닝이 가득뜨고 결과도 이상해서 다시 돌아왔는데 다른 모델을 적용할 때 방법이 무궁무진하다.
+  다시금 기본에 충실해야겠다는 생각을 하게 된다.
+- transfer learning의 효과를 경험하며, 더 잘하면 굉장히 높은 정확도를 달성할 수 있을 것 같다.
+- 배울것들이 많지만, 계속해서 꾸준히 하나하나 늘리면 계속 성장할 수 있을 것 같다. 꾸준한게 중요한듯.
+  이것 저것 하는 것보다 하나라도 제대로 하는게 중요한 것 같다.
+</code></pre>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><pre><code>Resnet으로 구현
+https://www.kaggle.com/code/abhishekdhule/pneumonia-detection-resnet-inception-tensorflow 
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os, re</span><br><span class="line"><span class="keyword">import</span> random, math</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> warnings </span><br><span class="line">warnings.filterwarnings(action=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 데이터 읽어오기</span></span><br><span class="line"></span><br><span class="line">AUTOTUNE = tf.data.experimental.AUTOTUNE  <span class="comment"># 데이터 로드할 때 빠르게 로드할 수 있도록하는 설정 변수</span></span><br><span class="line">IMAGE_SIZE = [<span class="number">180</span>, <span class="number">180</span>] <span class="comment"># X-RAY 이미지 사이즈 변수</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 데이터 경로 변수</span></span><br><span class="line">ROOT_PATH = os.path.join(os.getenv(<span class="string">&#x27;HOME&#x27;</span>))</span><br><span class="line">TRAIN_PATH = ROOT_PATH + <span class="string">&#x27;/data/train/*/*&#x27;</span></span><br><span class="line">VAL_PATH = ROOT_PATH + <span class="string">&#x27;/data/val/*/*&#x27;</span></span><br><span class="line">TEST_PATH = ROOT_PATH + <span class="string">&#x27;/data/test/*/*&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># tf.io.gfile.glob() 이 함수는 주어진 패턴에 맞는 파일들의 경로를 리스트 형태로 반환</span></span><br><span class="line">train_filenames = tf.io.gfile.glob(TRAIN_PATH)</span><br><span class="line">test_filenames = tf.io.gfile.glob(TEST_PATH)</span><br><span class="line">val_filenames = tf.io.gfile.glob(VAL_PATH)</span><br><span class="line"></span><br><span class="line"><span class="comment"># train, validation 데이터 합치기</span></span><br><span class="line">filenames = tf.io.gfile.glob(TRAIN_PATH)</span><br><span class="line">filenames.extend(tf.io.gfile.glob(VAL_PATH))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 모아진 filenames를 8:2 나누기</span></span><br><span class="line">train_size = math.floor(<span class="built_in">len</span>(filenames)*<span class="number">0.8</span>) <span class="comment"># 80의 비율의 수 math.floor()는 소수점 버리기</span></span><br><span class="line">random.seed(<span class="number">8</span>)</span><br><span class="line">random.shuffle(filenames) <span class="comment"># random.shuffle로 순서 섞기</span></span><br><span class="line">train_filenames = filenames[:train_size] <span class="comment"># 나눈다</span></span><br><span class="line">val_filenames = filenames[train_size:]  <span class="comment"># 여기서 맹점은 answer가 랜덤하게 섞여서 한쪽으로 치중될 수 있음.</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;train&quot;</span>,<span class="built_in">len</span>(train_filenames))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;valid&quot;</span>,<span class="built_in">len</span>(val_filenames))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;test&quot;</span>, <span class="built_in">len</span>(test_filenames))</span><br><span class="line"></span><br><span class="line"><span class="built_in">sum</span> = <span class="built_in">len</span>(train_filenames) + <span class="built_in">len</span>(val_filenames)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;train + val 파일 개수 합계&quot;</span>,<span class="built_in">sum</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;train image 개수&quot;</span>, <span class="built_in">len</span>(train_filenames))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;valid image 개수&quot;</span>, <span class="built_in">len</span>(val_filenames))</span><br></pre></td></tr></table></figure>
+
+<pre><code>train 4185
+valid 1047
+test 624
+train + val 파일 개수 합계 5232
+train image 개수 4185
+valid image 개수 1047
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># print(f&#x27;Normal image path\n&#123;filenames[0]&#125;&#x27;)</span></span><br><span class="line"><span class="comment"># print(f&#x27;Pneumonia image path\n&#123;filenames[2000]&#125;&#x27;) # 이름을 힌트삼아 라벨링</span></span><br><span class="line"></span><br><span class="line">COUNT_NORMAL = <span class="built_in">len</span>([filename <span class="keyword">for</span> filename <span class="keyword">in</span> train_filenames <span class="keyword">if</span> <span class="string">&quot;NORMAL&quot;</span> <span class="keyword">in</span> filename]) <span class="comment"># </span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 이거랑 비슷함. 여기서는 배열의 수를 세고 있다.</span></span><br><span class="line"><span class="comment"># sum = 0</span></span><br><span class="line"><span class="comment"># for name in tran_filenames:</span></span><br><span class="line"><span class="comment">#   if &quot;NORMAL&quot; in filename  </span></span><br><span class="line"><span class="comment">#       sum += 1</span></span><br><span class="line"><span class="comment"># print(sum)</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Normal images count in training set: <span class="subst">&#123;COUNT_NORMAL&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 타겟 수 확인</span></span><br><span class="line">COUNT_PNEUMONIA = <span class="built_in">len</span>([filename <span class="keyword">for</span> filename <span class="keyword">in</span> train_filenames <span class="keyword">if</span> <span class="string">&quot;PNEUMONIA&quot;</span> <span class="keyword">in</span> filename])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Pneumonia images count in training set: <span class="subst">&#123;COUNT_PNEUMONIA&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">train_list_ds = tf.data.Dataset.from_tensor_slices(train_filenames) <span class="comment"># tf.data.Dataset.from_tensor_slices 처음보네</span></span><br><span class="line">val_list_ds = tf.data.Dataset.from_tensor_slices(val_filenames)</span><br><span class="line">test_list_ds = tf.data.Dataset.from_tensor_slices(test_filenames)</span><br><span class="line"></span><br><span class="line">TRAIN_IMG_COUNT = tf.data.experimental.cardinality(train_list_ds).numpy()</span><br><span class="line">VAL_IMG_COUNT = tf.data.experimental.cardinality(val_list_ds).numpy()</span><br><span class="line">TEST_IMG_COUNT = tf.data.experimental.cardinality(test_list_ds).numpy()</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Training images count: <span class="subst">&#123;TRAIN_IMG_COUNT&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Validating images count: <span class="subst">&#123;VAL_IMG_COUNT&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;TEST images count: <span class="subst">&#123;TEST_IMG_COUNT&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Normal images count in training set: 1070
+Pneumonia images count in training set: 3115
+Training images count: 4185
+Validating images count: 1047
+TEST images count: 624
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 라벨링</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ***파일 경로의 끝에서 두번째 부분을 확인하면 양성과 음성을 구분***</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_label</span>(<span class="params">file_path</span>):</span><br><span class="line">    parts = tf.strings.split(file_path, os.path.sep)</span><br><span class="line">    <span class="keyword">return</span> parts[-<span class="number">2</span>] == <span class="string">&quot;PNEUMONIA&quot;</span>   <span class="comment"># 폐렴이면 양성(True), 노말이면 음성(False)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ***이미지를 알맞은 형식으로 변경 ***</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">decode_img</span>(<span class="params">img</span>):</span><br><span class="line">    img = tf.image.decode_jpeg(img, channels=<span class="number">3</span>) <span class="comment"># 이미지를 uint8 tensor로 수정</span></span><br><span class="line">    img = tf.image.convert_image_dtype(img, tf.float32) <span class="comment"># float32 타입으로 수정</span></span><br><span class="line">    img = tf.image.resize(img, IMAGE_SIZE) <span class="comment"># 이미지 사이즈를 IMAGE_SIZE로 수정</span></span><br><span class="line">    <span class="keyword">return</span> img</span><br><span class="line"></span><br><span class="line"><span class="comment"># ***이미지 파일의 경로를 입력하면 이미지와 라벨을 읽어옵니다.***</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_path</span>(<span class="params">file_path</span>):</span><br><span class="line">    label = get_label(file_path) <span class="comment"># 라벨 검출</span></span><br><span class="line">    img = tf.io.read_file(file_path) <span class="comment"># 이미지 읽기</span></span><br><span class="line">    img = decode_img(img) <span class="comment"># 이미지를 알맞은 형식으로 수정</span></span><br><span class="line">    <span class="keyword">return</span> img, label</span><br><span class="line"></span><br><span class="line"><span class="comment"># num_parallel_calls 파라미터에 위에서 할당한 AUTOTUNE변수를 이용하면 더욱 빠르게 데이터를 처리 가능</span></span><br><span class="line"></span><br><span class="line">train_ds = train_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># train data processing</span></span><br><span class="line"><span class="comment"># train_ds = train_ds.map(augment, num_parallel_calls=AUTOTUNE)  # 데이터 증강 추가</span></span><br><span class="line">val_ds = val_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># validation data processing</span></span><br><span class="line">test_ds = test_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># test data processing</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 이미지가 잘 리사이즈 되었는지, 그리고 라벨이 잘 들어가 있는지 확인</span></span><br><span class="line"><span class="keyword">for</span> image, label <span class="keyword">in</span> train_ds.take(<span class="number">1</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Image shape: &quot;</span>, image.numpy().shape)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Label: &quot;</span>, label.numpy())</span><br></pre></td></tr></table></figure>
+
+<pre><code>Image shape:  (180, 180, 3)
+Label:  False
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 데이터 전처리 과정</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">prepare_for_training</span>(<span class="params">ds, shuffle_buffer_size=<span class="number">1000</span></span>):</span><br><span class="line">    ds = ds.shuffle(buffer_size=shuffle_buffer_size)</span><br><span class="line">    ds = ds.repeat()</span><br><span class="line">    ds = ds.batch(BATCH_SIZE)</span><br><span class="line">    ds = ds.prefetch(buffer_size=AUTOTUNE)</span><br><span class="line">    <span class="keyword">return</span> ds</span><br><span class="line"></span><br><span class="line">BATCH_SIZE = <span class="number">16</span> <span class="comment"># 기존 16</span></span><br><span class="line">EPOCHS = <span class="number">10</span> <span class="comment"># 에포크 10</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">prepare_for_test</span>(<span class="params">ds</span>):</span><br><span class="line">    ds = ds.batch(BATCH_SIZE)</span><br><span class="line">    ds = ds.prefetch(buffer_size=AUTOTUNE)</span><br><span class="line">    <span class="keyword">return</span> ds</span><br><span class="line"></span><br><span class="line">train_ds = prepare_for_training(train_ds)</span><br><span class="line">val_ds = prepare_for_training(val_ds)</span><br><span class="line">test_ds = prepare_for_test(test_ds)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 이미지 배치를 입력하면 여러장의 이미지를 보여줍니다.</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">show_batch</span>(<span class="params">image_batch, label_batch</span>):</span><br><span class="line">    plt.figure(figsize=(<span class="number">10</span>,<span class="number">10</span>))</span><br><span class="line">    <span class="keyword">for</span> n <span class="keyword">in</span> <span class="built_in">range</span>(BATCH_SIZE):</span><br><span class="line">        ax = plt.subplot(<span class="number">4</span>,math.ceil(BATCH_SIZE/<span class="number">4</span>),n+<span class="number">1</span>)</span><br><span class="line">        image = np.clip(image_batch[n], <span class="number">0</span>, <span class="number">1</span>)  <span class="comment"># 이미지를 유효한 범위로 클리핑</span></span><br><span class="line">        plt.imshow(image)</span><br><span class="line">        <span class="keyword">if</span> label_batch[n]:</span><br><span class="line">            plt.title(<span class="string">&quot;PNEUMONIA&quot;</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            plt.title(<span class="string">&quot;NORMAL&quot;</span>)</span><br><span class="line">        plt.axis(<span class="string">&quot;off&quot;</span>)</span><br><span class="line">        </span><br><span class="line">image_batch, label_batch = <span class="built_in">next</span>(<span class="built_in">iter</span>(train_ds))</span><br><span class="line">show_batch(image_batch.numpy(), label_batch.numpy())</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/MainQuest4_files/MainQuest4_5_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 모델 직접 만들기</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">conv_block</span>(<span class="params">filters</span>):</span><br><span class="line">    block = tf.keras.Sequential([</span><br><span class="line">        tf.keras.layers.SeparableConv2D(filters, <span class="number">3</span>, activation=<span class="string">&#x27;relu&#x27;</span>, padding=<span class="string">&#x27;same&#x27;</span>),</span><br><span class="line">        tf.keras.layers.SeparableConv2D(filters, <span class="number">3</span>, activation=<span class="string">&#x27;relu&#x27;</span>, padding=<span class="string">&#x27;same&#x27;</span>),</span><br><span class="line">        tf.keras.layers.BatchNormalization(),</span><br><span class="line">        tf.keras.layers.MaxPool2D()</span><br><span class="line">    ])</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> block</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dense_block</span>(<span class="params">units, dropout_rate</span>):</span><br><span class="line">    block = tf.keras.Sequential([</span><br><span class="line">        tf.keras.layers.Dense(units, activation=<span class="string">&#x27;relu&#x27;</span>),</span><br><span class="line">        tf.keras.layers.BatchNormalization(),</span><br><span class="line">        tf.keras.layers.Dropout(dropout_rate)</span><br><span class="line">    ])</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> block</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">build_model</span>():</span><br><span class="line">    model = tf.keras.Sequential([</span><br><span class="line">        tf.keras.Input(shape=(IMAGE_SIZE[<span class="number">0</span>], IMAGE_SIZE[<span class="number">1</span>], <span class="number">3</span>)),</span><br><span class="line">        </span><br><span class="line">        tf.keras.layers.Conv2D(<span class="number">16</span>, <span class="number">3</span>, activation=<span class="string">&#x27;relu&#x27;</span>, padding=<span class="string">&#x27;same&#x27;</span>),</span><br><span class="line">        tf.keras.layers.Conv2D(<span class="number">16</span>, <span class="number">3</span>, activation=<span class="string">&#x27;relu&#x27;</span>, padding=<span class="string">&#x27;same&#x27;</span>),</span><br><span class="line">        tf.keras.layers.MaxPool2D(),</span><br><span class="line">        </span><br><span class="line">        conv_block(<span class="number">32</span>),</span><br><span class="line">        conv_block(<span class="number">64</span>),</span><br><span class="line">        </span><br><span class="line">        conv_block(<span class="number">128</span>),</span><br><span class="line">        tf.keras.layers.Dropout(<span class="number">0.2</span>),</span><br><span class="line">        </span><br><span class="line">        conv_block(<span class="number">256</span>),</span><br><span class="line">        tf.keras.layers.Dropout(<span class="number">0.2</span>),</span><br><span class="line">        </span><br><span class="line">        tf.keras.layers.Flatten(),</span><br><span class="line">        dense_block(<span class="number">512</span>, <span class="number">0.7</span>),</span><br><span class="line">        dense_block(<span class="number">128</span>, <span class="number">0.5</span>),</span><br><span class="line">        dense_block(<span class="number">64</span>, <span class="number">0.3</span>),</span><br><span class="line">        </span><br><span class="line">        tf.keras.layers.Dense(<span class="number">1</span>, activation=<span class="string">&#x27;sigmoid&#x27;</span>)</span><br><span class="line">    ])</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> model</span><br></pre></td></tr></table></figure>
+
+<h1 id="첫번째-모델-실험"><a href="#첫번째-모델-실험" class="headerlink" title="첫번째 모델 실험"></a>첫번째 모델 실험</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 학습시키기 위한 컴파일</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    model1 = build_model()</span><br><span class="line"></span><br><span class="line">    METRICS = [</span><br><span class="line">        <span class="string">&#x27;accuracy&#x27;</span>,</span><br><span class="line">        tf.keras.metrics.Precision(name=<span class="string">&#x27;precision&#x27;</span>),</span><br><span class="line">        tf.keras.metrics.Recall(name=<span class="string">&#x27;recall&#x27;</span>)</span><br><span class="line">    ]</span><br><span class="line">    <span class="comment"># optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용 </span></span><br><span class="line">    model1.<span class="built_in">compile</span>(</span><br><span class="line">        optimizer=<span class="string">&#x27;RMSprop&#x27;</span>,</span><br><span class="line">        loss=<span class="string">&#x27;binary_crossentropy&#x27;</span>,</span><br><span class="line">        metrics=METRICS</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="comment"># BATCH_SIZE, EPOCHS</span></span><br><span class="line">BATCH_SIZE = <span class="number">16</span> <span class="comment"># 기존 16</span></span><br><span class="line">EPOCHS = <span class="number">10</span> <span class="comment"># 에포크 10</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 가중치 설정 -  전체 개수 * 노멀개수 * 2 </span></span><br><span class="line">weight_for_0 = (<span class="number">1</span> / COUNT_NORMAL)*(TRAIN_IMG_COUNT)/<span class="number">2.0</span> <span class="comment"># 2를 왜 나눌까? 가중치 합이 1에 가까워지도록 2를 나눈다.</span></span><br><span class="line">weight_for_1 = (<span class="number">1</span> / COUNT_PNEUMONIA)*(TRAIN_IMG_COUNT)/<span class="number">2.0</span></span><br><span class="line"></span><br><span class="line">class_weight = &#123;<span class="number">0</span>: weight_for_0, <span class="number">1</span>: weight_for_1&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Weight for NORMAL: &#123;:.2f&#125;&#x27;</span>.<span class="built_in">format</span>(weight_for_0))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Weight for PNEUMONIA: &#123;:.2f&#125;&#x27;</span>.<span class="built_in">format</span>(weight_for_1))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Weight for NORMAL: 1.96
+Weight for PNEUMONIA: 0.67
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    history1 = model1.fit(</span><br><span class="line">        train_ds,</span><br><span class="line">        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        epochs=EPOCHS,</span><br><span class="line">        validation_data=val_ds,</span><br><span class="line">        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        class_weight=class_weight,</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<pre><code>Epoch 1/10
+261/261 [==============================] - 61s 195ms/step - loss: 0.3939 - accuracy: 0.8094 - precision: 0.9520 - recall: 0.7836 - val_loss: 0.7257 - val_accuracy: 0.7317 - val_precision: 0.7317 - val_recall: 1.0000
+Epoch 2/10
+261/261 [==============================] - 50s 192ms/step - loss: 0.2351 - accuracy: 0.9114 - precision: 0.9692 - recall: 0.9100 - val_loss: 1.4855 - val_accuracy: 0.7346 - val_precision: 0.7346 - val_recall: 1.0000
+Epoch 3/10
+261/261 [==============================] - 51s 194ms/step - loss: 0.1929 - accuracy: 0.9313 - precision: 0.9756 - recall: 0.9306 - val_loss: 0.1036 - val_accuracy: 0.9625 - val_precision: 0.9629 - val_recall: 0.9869
+Epoch 4/10
+261/261 [==============================] - 51s 194ms/step - loss: 0.1908 - accuracy: 0.9389 - precision: 0.9770 - recall: 0.9402 - val_loss: 1.3750 - val_accuracy: 0.7337 - val_precision: 0.7334 - val_recall: 1.0000
+Epoch 5/10
+261/261 [==============================] - 52s 201ms/step - loss: 0.1529 - accuracy: 0.9509 - precision: 0.9833 - recall: 0.9501 - val_loss: 0.2325 - val_accuracy: 0.9308 - val_precision: 0.9957 - val_recall: 0.9094
+Epoch 6/10
+261/261 [==============================] - 53s 205ms/step - loss: 0.1431 - accuracy: 0.9552 - precision: 0.9812 - recall: 0.9582 - val_loss: 0.0749 - val_accuracy: 0.9721 - val_precision: 0.9842 - val_recall: 0.9777
+Epoch 7/10
+261/261 [==============================] - 56s 216ms/step - loss: 0.1366 - accuracy: 0.9591 - precision: 0.9855 - recall: 0.9592 - val_loss: 0.1406 - val_accuracy: 0.9500 - val_precision: 0.9958 - val_recall: 0.9358
+Epoch 8/10
+261/261 [==============================] - 47s 181ms/step - loss: 0.1184 - accuracy: 0.9619 - precision: 0.9858 - recall: 0.9627 - val_loss: 0.0824 - val_accuracy: 0.9712 - val_precision: 0.9919 - val_recall: 0.9685
+Epoch 9/10
+261/261 [==============================] - 49s 188ms/step - loss: 0.1423 - accuracy: 0.9586 - precision: 0.9790 - recall: 0.9648 - val_loss: 0.2291 - val_accuracy: 0.9144 - val_precision: 0.9814 - val_recall: 0.9003
+Epoch 10/10
+261/261 [==============================] - 49s 187ms/step - loss: 0.1215 - accuracy: 0.9583 - precision: 0.9858 - recall: 0.9579 - val_loss: 0.0790 - val_accuracy: 0.9750 - val_precision: 0.9755 - val_recall: 0.9908
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fig, ax = plt.subplots(<span class="number">1</span>, <span class="number">4</span>, figsize=(<span class="number">20</span>, <span class="number">3</span>))</span><br><span class="line">ax = ax.ravel()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i, met <span class="keyword">in</span> <span class="built_in">enumerate</span>([<span class="string">&#x27;precision&#x27;</span>, <span class="string">&#x27;recall&#x27;</span>, <span class="string">&#x27;accuracy&#x27;</span>, <span class="string">&#x27;loss&#x27;</span>]):</span><br><span class="line">    ax[i].plot(history1.history[met])</span><br><span class="line">    ax[i].plot(history1.history[<span class="string">&#x27;val_&#x27;</span> + met])</span><br><span class="line">    ax[i].set_title(<span class="string">&#x27;Model &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(met))</span><br><span class="line">    ax[i].set_xlabel(<span class="string">&#x27;epochs&#x27;</span>)</span><br><span class="line">    ax[i].set_ylabel(met)</span><br><span class="line">    ax[i].legend([<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;val&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/MainQuest4_files/MainQuest4_10_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">loss, accuracy, precision, recall = model1.evaluate(test_ds)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&#x27;Loss: <span class="subst">&#123;loss&#125;</span>,\nAccuracy: <span class="subst">&#123;accuracy&#125;</span>,\nPrecision: <span class="subst">&#123;precision&#125;</span>,\nRecall: <span class="subst">&#123;recall&#125;</span>&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>39/39 [==============================] - 5s 114ms/step - loss: 1.0947 - accuracy: 0.7596 - precision: 0.7247 - recall: 0.9923
+Loss: 1.0947277545928955,
+Accuracy: 0.7596153616905212,
+Precision: 0.7247191071510315,
+Recall: 0.9923076629638672
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="두번째-실험-데이터-증강"><a href="#두번째-실험-데이터-증강" class="headerlink" title="두번째 실험 - 데이터 증강"></a>두번째 실험 - 데이터 증강</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ***데이터 증강 추가***</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">augment</span>(<span class="params">image, label</span>):</span><br><span class="line">    image = tf.image.random_flip_left_right(image) <span class="comment"># 좌우 반전</span></span><br><span class="line">    image = tf.image.random_flip_up_down(image)    <span class="comment"># 상하 반전</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> image, label</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 데이터 증강</span></span><br><span class="line">train_ds = train_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># train data processing</span></span><br><span class="line">train_ds = train_ds.<span class="built_in">map</span>(augment, num_parallel_calls=AUTOTUNE)  <span class="comment"># 데이터 증강 추가</span></span><br><span class="line">val_ds = val_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># validation data processing</span></span><br><span class="line">test_ds = test_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># test data processing</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 데이터 전처리</span></span><br><span class="line">train_ds = prepare_for_training(train_ds)</span><br><span class="line">val_ds = prepare_for_training(val_ds)</span><br><span class="line">test_ds = prepare_for_test(test_ds)</span><br><span class="line"></span><br><span class="line">image_batch, label_batch = <span class="built_in">next</span>(<span class="built_in">iter</span>(train_ds))</span><br><span class="line">show_batch(image_batch.numpy(), label_batch.numpy())</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/MainQuest4_files/MainQuest4_16_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 학습시키기 위한 컴파일</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    model2 = build_model()</span><br><span class="line"></span><br><span class="line">    METRICS = [</span><br><span class="line">        <span class="string">&#x27;accuracy&#x27;</span>,</span><br><span class="line">        tf.keras.metrics.Precision(name=<span class="string">&#x27;precision&#x27;</span>),</span><br><span class="line">        tf.keras.metrics.Recall(name=<span class="string">&#x27;recall&#x27;</span>)</span><br><span class="line">    ]</span><br><span class="line">    <span class="comment"># optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용 </span></span><br><span class="line">    model2.<span class="built_in">compile</span>(</span><br><span class="line">        optimizer=<span class="string">&#x27;RMSprop&#x27;</span>,</span><br><span class="line">        loss=<span class="string">&#x27;binary_crossentropy&#x27;</span>,</span><br><span class="line">        metrics=METRICS</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="comment"># BATCH_SIZE, EPOCHS</span></span><br><span class="line">BATCH_SIZE = <span class="number">16</span> <span class="comment"># 기존 16</span></span><br><span class="line">EPOCHS = <span class="number">10</span> <span class="comment"># 에포크 10</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 가중치 설정 -  전체 개수 * 노멀개수 * 2 </span></span><br><span class="line">weight_for_0 = (<span class="number">1</span> / COUNT_NORMAL)*(TRAIN_IMG_COUNT)/<span class="number">2.0</span></span><br><span class="line">weight_for_1 = (<span class="number">1</span> / COUNT_PNEUMONIA)*(TRAIN_IMG_COUNT)/<span class="number">2.0</span></span><br><span class="line"></span><br><span class="line">class_weight = &#123;<span class="number">0</span>: weight_for_0, <span class="number">1</span>: weight_for_1&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Weight for NORMAL: &#123;:.2f&#125;&#x27;</span>.<span class="built_in">format</span>(weight_for_0))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Weight for PNEUMONIA: &#123;:.2f&#125;&#x27;</span>.<span class="built_in">format</span>(weight_for_1))</span><br><span class="line">COUNT_NORMAL + COUNT_PNEUMONIA, TRAIN_IMG_COUNT, weight_for_0 + weight_for_1 , COUNT_PNEUMONIA/COUNT_NORMAL</span><br></pre></td></tr></table></figure>
+
+<pre><code>Weight for NORMAL: 1.96
+Weight for PNEUMONIA: 0.67
+
+
+
+
+
+(4185, 4185, 2.627357075351405, 2.911214953271028)
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    history2 = model2.fit(</span><br><span class="line">        train_ds,</span><br><span class="line">        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        epochs=EPOCHS,</span><br><span class="line">        validation_data=val_ds,</span><br><span class="line">        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        class_weight=class_weight,</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<pre><code>Epoch 1/10
+261/261 [==============================] - 64s 205ms/step - loss: 0.5470 - accuracy: 0.7189 - precision: 0.9129 - recall: 0.6879 - val_loss: 0.5958 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000
+Epoch 2/10
+261/261 [==============================] - 53s 204ms/step - loss: 0.3430 - accuracy: 0.8546 - precision: 0.9596 - recall: 0.8401 - val_loss: 0.5187 - val_accuracy: 0.8442 - val_precision: 0.9950 - val_recall: 0.7913
+Epoch 3/10
+261/261 [==============================] - 53s 202ms/step - loss: 0.2776 - accuracy: 0.8954 - precision: 0.9665 - recall: 0.8904 - val_loss: 0.2264 - val_accuracy: 0.9163 - val_precision: 0.9760 - val_recall: 0.9081
+Epoch 4/10
+261/261 [==============================] - 53s 204ms/step - loss: 0.2818 - accuracy: 0.8903 - precision: 0.9639 - recall: 0.8856 - val_loss: 0.1830 - val_accuracy: 0.9375 - val_precision: 0.9703 - val_recall: 0.9435
+Epoch 5/10
+261/261 [==============================] - 53s 204ms/step - loss: 0.2356 - accuracy: 0.9073 - precision: 0.9696 - recall: 0.9038 - val_loss: 0.2102 - val_accuracy: 0.9212 - val_precision: 0.9899 - val_recall: 0.9016
+Epoch 6/10
+261/261 [==============================] - 55s 210ms/step - loss: 0.2231 - accuracy: 0.9193 - precision: 0.9737 - recall: 0.9164 - val_loss: 0.2792 - val_accuracy: 0.8740 - val_precision: 0.9984 - val_recall: 0.8296
+Epoch 7/10
+261/261 [==============================] - 57s 221ms/step - loss: 0.2010 - accuracy: 0.9253 - precision: 0.9752 - recall: 0.9232 - val_loss: 0.4176 - val_accuracy: 0.8202 - val_precision: 0.8042 - val_recall: 0.9987
+Epoch 8/10
+261/261 [==============================] - 50s 192ms/step - loss: 0.1914 - accuracy: 0.9322 - precision: 0.9767 - recall: 0.9310 - val_loss: 0.1475 - val_accuracy: 0.9500 - val_precision: 0.9449 - val_recall: 0.9895
+Epoch 9/10
+261/261 [==============================] - 50s 194ms/step - loss: 0.1879 - accuracy: 0.9341 - precision: 0.9779 - recall: 0.9331 - val_loss: 0.1079 - val_accuracy: 0.9567 - val_precision: 0.9638 - val_recall: 0.9777
+Epoch 10/10
+261/261 [==============================] - 49s 186ms/step - loss: 0.1742 - accuracy: 0.9423 - precision: 0.9785 - recall: 0.9428 - val_loss: 0.1254 - val_accuracy: 0.9596 - val_precision: 0.9712 - val_recall: 0.9738
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fig, ax = plt.subplots(<span class="number">1</span>, <span class="number">4</span>, figsize=(<span class="number">20</span>, <span class="number">3</span>))</span><br><span class="line">ax = ax.ravel()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i, met <span class="keyword">in</span> <span class="built_in">enumerate</span>([<span class="string">&#x27;precision&#x27;</span>, <span class="string">&#x27;recall&#x27;</span>, <span class="string">&#x27;accuracy&#x27;</span>, <span class="string">&#x27;loss&#x27;</span>]):</span><br><span class="line">    ax[i].plot(history2.history[met])</span><br><span class="line">    ax[i].plot(history2.history[<span class="string">&#x27;val_&#x27;</span> + met])</span><br><span class="line">    ax[i].set_title(<span class="string">&#x27;Model &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(met))</span><br><span class="line">    ax[i].set_xlabel(<span class="string">&#x27;epochs&#x27;</span>)</span><br><span class="line">    ax[i].set_ylabel(met)</span><br><span class="line">    ax[i].legend([<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;val&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/MainQuest4_files/MainQuest4_19_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">loss, accuracy, precision, recall = model2.evaluate(test_ds)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&#x27;Loss: <span class="subst">&#123;loss&#125;</span>,\nAccuracy: <span class="subst">&#123;accuracy&#125;</span>,\nPrecision: <span class="subst">&#123;precision&#125;</span>,\nRecall: <span class="subst">&#123;recall&#125;</span>&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>39/39 [==============================] - 4s 102ms/step - loss: 0.9548 - accuracy: 0.7436 - precision: 0.7130 - recall: 0.9872
+Loss: 0.9548077583312988,
+Accuracy: 0.7435897588729858,
+Precision: 0.7129629850387573,
+Recall: 0.9871794581413269
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="세번째-실험-하이퍼-파라미터-수정"><a href="#세번째-실험-하이퍼-파라미터-수정" class="headerlink" title="세번째 실험 - 하이퍼 파라미터 수정"></a>세번째 실험 - 하이퍼 파라미터 수정</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 데이터 증강 제외</span></span><br><span class="line">train_ds = train_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># train data processing</span></span><br><span class="line">val_ds = val_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># validation data processing</span></span><br><span class="line">test_ds = test_list_ds.<span class="built_in">map</span>(process_path, num_parallel_calls=AUTOTUNE) <span class="comment"># test data processing</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">train_ds = prepare_for_training(train_ds)</span><br><span class="line">val_ds = prepare_for_training(val_ds)</span><br><span class="line">test_ds = prepare_for_test(test_ds)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 학습시키기 위한 컴파일</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    model3 = build_model()</span><br><span class="line"></span><br><span class="line">    METRICS = [</span><br><span class="line">        <span class="string">&#x27;accuracy&#x27;</span>,</span><br><span class="line">        tf.keras.metrics.Precision(name=<span class="string">&#x27;precision&#x27;</span>),</span><br><span class="line">        tf.keras.metrics.Recall(name=<span class="string">&#x27;recall&#x27;</span>)</span><br><span class="line">    ]</span><br><span class="line">    <span class="comment"># optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용 </span></span><br><span class="line">    model3.<span class="built_in">compile</span>(</span><br><span class="line">        optimizer=<span class="string">&#x27;adam&#x27;</span>,</span><br><span class="line">        loss=<span class="string">&#x27;binary_crossentropy&#x27;</span>,</span><br><span class="line">        metrics=METRICS</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="comment"># BATCH_SIZE, EPOCHS</span></span><br><span class="line">BATCH_SIZE = <span class="number">8</span> <span class="comment"># 기존 16</span></span><br><span class="line">EPOCHS = <span class="number">15</span> <span class="comment"># 에포크 10</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 가중치 설정 -  전체 개수 * 노멀개수 * 2 </span></span><br><span class="line">weight_for_0 = (<span class="number">1</span> / COUNT_NORMAL)*(TRAIN_IMG_COUNT)/<span class="number">2.0</span> <span class="comment"># 2를 왜 나눌까? 가중치 합이 1에 가까워지도록 2를 나눈다.</span></span><br><span class="line">weight_for_1 = (<span class="number">1</span> / COUNT_PNEUMONIA)*(TRAIN_IMG_COUNT)/<span class="number">2.0</span></span><br><span class="line"></span><br><span class="line">class_weight = &#123;<span class="number">0</span>: weight_for_0, <span class="number">1</span>: weight_for_1&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Weight for NORMAL: &#123;:.2f&#125;&#x27;</span>.<span class="built_in">format</span>(weight_for_0))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Weight for PNEUMONIA: &#123;:.2f&#125;&#x27;</span>.<span class="built_in">format</span>(weight_for_1))</span><br><span class="line">COUNT_NORMAL + COUNT_PNEUMONIA, TRAIN_IMG_COUNT, weight_for_0 + weight_for_1 , COUNT_PNEUMONIA/COUNT_NORMAL</span><br></pre></td></tr></table></figure>
+
+<pre><code>Weight for NORMAL: 1.96
+Weight for PNEUMONIA: 0.67
+
+
+
+
+
+(4185, 4185, 2.627357075351405, 2.911214953271028)
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    history3 = model3.fit(</span><br><span class="line">        train_ds,</span><br><span class="line">        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        epochs=EPOCHS,</span><br><span class="line">        validation_data=val_ds,</span><br><span class="line">        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        class_weight=class_weight,</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<pre><code>Epoch 1/15
+523/523 [==============================] - 105s 183ms/step - loss: 0.3535 - accuracy: 0.8371 - precision: 0.9527 - recall: 0.8219 - val_loss: 1.4368 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000
+Epoch 2/15
+523/523 [==============================] - 95s 182ms/step - loss: 0.1993 - accuracy: 0.9301 - precision: 0.9751 - recall: 0.9298 - val_loss: 0.1533 - val_accuracy: 0.9370 - val_precision: 0.9286 - val_recall: 0.9902
+Epoch 3/15
+523/523 [==============================] - 95s 182ms/step - loss: 0.1661 - accuracy: 0.9401 - precision: 0.9809 - recall: 0.9379 - val_loss: 0.0792 - val_accuracy: 0.9673 - val_precision: 0.9790 - val_recall: 0.9764
+Epoch 4/15
+523/523 [==============================] - 94s 180ms/step - loss: 0.1528 - accuracy: 0.9425 - precision: 0.9824 - recall: 0.9396 - val_loss: 0.2509 - val_accuracy: 0.9192 - val_precision: 0.9985 - val_recall: 0.8911
+Epoch 5/15
+523/523 [==============================] - 97s 185ms/step - loss: 0.1278 - accuracy: 0.9536 - precision: 0.9862 - recall: 0.9510 - val_loss: 0.0669 - val_accuracy: 0.9740 - val_precision: 0.9907 - val_recall: 0.9739
+Epoch 6/15
+523/523 [==============================] - 97s 186ms/step - loss: 0.1259 - accuracy: 0.9532 - precision: 0.9860 - recall: 0.9506 - val_loss: 0.0767 - val_accuracy: 0.9726 - val_precision: 0.9854 - val_recall: 0.9770
+Epoch 7/15
+523/523 [==============================] - 99s 190ms/step - loss: 0.1053 - accuracy: 0.9614 - precision: 0.9907 - recall: 0.9571 - val_loss: 0.0831 - val_accuracy: 0.9702 - val_precision: 0.9716 - val_recall: 0.9882
+Epoch 8/15
+523/523 [==============================] - 99s 189ms/step - loss: 0.0951 - accuracy: 0.9665 - precision: 0.9919 - recall: 0.9629 - val_loss: 0.0876 - val_accuracy: 0.9654 - val_precision: 0.9932 - val_recall: 0.9594
+Epoch 9/15
+523/523 [==============================] - 93s 177ms/step - loss: 0.0983 - accuracy: 0.9639 - precision: 0.9912 - recall: 0.9600 - val_loss: 0.0735 - val_accuracy: 0.9712 - val_precision: 0.9906 - val_recall: 0.9699
+Epoch 10/15
+523/523 [==============================] - 90s 173ms/step - loss: 0.0958 - accuracy: 0.9653 - precision: 0.9904 - recall: 0.9628 - val_loss: 1.7872 - val_accuracy: 0.7365 - val_precision: 0.7355 - val_recall: 1.0000
+Epoch 11/15
+523/523 [==============================] - 92s 177ms/step - loss: 0.0775 - accuracy: 0.9717 - precision: 0.9944 - recall: 0.9674 - val_loss: 0.2469 - val_accuracy: 0.9187 - val_precision: 0.9985 - val_recall: 0.8903
+Epoch 12/15
+523/523 [==============================] - 92s 175ms/step - loss: 0.0776 - accuracy: 0.9713 - precision: 0.9936 - recall: 0.9677 - val_loss: 0.0796 - val_accuracy: 0.9760 - val_precision: 0.9793 - val_recall: 0.9882
+Epoch 13/15
+523/523 [==============================] - 90s 172ms/step - loss: 0.0627 - accuracy: 0.9760 - precision: 0.9941 - recall: 0.9735 - val_loss: 0.0712 - val_accuracy: 0.9760 - val_precision: 0.9743 - val_recall: 0.9934
+Epoch 14/15
+523/523 [==============================] - 91s 174ms/step - loss: 0.0819 - accuracy: 0.9707 - precision: 0.9931 - recall: 0.9674 - val_loss: 0.0666 - val_accuracy: 0.9769 - val_precision: 0.9868 - val_recall: 0.9816
+Epoch 15/15
+523/523 [==============================] - 90s 172ms/step - loss: 0.0561 - accuracy: 0.9793 - precision: 0.9948 - recall: 0.9774 - val_loss: 0.0564 - val_accuracy: 0.9760 - val_precision: 0.9894 - val_recall: 0.9777
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fig, ax = plt.subplots(<span class="number">1</span>, <span class="number">4</span>, figsize=(<span class="number">20</span>, <span class="number">3</span>))</span><br><span class="line">ax = ax.ravel()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i, met <span class="keyword">in</span> <span class="built_in">enumerate</span>([<span class="string">&#x27;precision&#x27;</span>, <span class="string">&#x27;recall&#x27;</span>, <span class="string">&#x27;accuracy&#x27;</span>, <span class="string">&#x27;loss&#x27;</span>]):</span><br><span class="line">    ax[i].plot(history3.history[met])</span><br><span class="line">    ax[i].plot(history3.history[<span class="string">&#x27;val_&#x27;</span> + met])</span><br><span class="line">    ax[i].set_title(<span class="string">&#x27;Model &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(met))</span><br><span class="line">    ax[i].set_xlabel(<span class="string">&#x27;epochs&#x27;</span>)</span><br><span class="line">    ax[i].set_ylabel(met)</span><br><span class="line">    ax[i].legend([<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;val&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/MainQuest4_files/MainQuest4_27_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">loss, accuracy, precision, recall = model3.evaluate(test_ds)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&#x27;Loss: <span class="subst">&#123;loss&#125;</span>,\nAccuracy: <span class="subst">&#123;accuracy&#125;</span>,\nPrecision: <span class="subst">&#123;precision&#125;</span>,\nRecall: <span class="subst">&#123;recall&#125;</span>&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>39/39 [==============================] - 4s 108ms/step - loss: 1.2647 - accuracy: 0.7772 - precision: 0.7400 - recall: 0.9923
+Loss: 1.264716386795044,
+Accuracy: 0.7772436141967773,
+Precision: 0.7399617433547974,
+Recall: 0.9923076629638672
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="4번째-가중치-제거시-어떻게될까"><a href="#4번째-가중치-제거시-어떻게될까" class="headerlink" title="4번째 - 가중치 제거시 어떻게될까?"></a>4번째 - 가중치 제거시 어떻게될까?</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 학습시키기 위한 컴파일</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    model4 = build_model()</span><br><span class="line"></span><br><span class="line">    METRICS = [</span><br><span class="line">        <span class="string">&#x27;accuracy&#x27;</span>,</span><br><span class="line">        tf.keras.metrics.Precision(name=<span class="string">&#x27;precision&#x27;</span>),</span><br><span class="line">        tf.keras.metrics.Recall(name=<span class="string">&#x27;recall&#x27;</span>)</span><br><span class="line">    ]</span><br><span class="line">    <span class="comment"># optimizer = Adam, loss function은 답이 2종류라서 binary_crossentropy, 메트릭은 3개 사용 </span></span><br><span class="line">    model4.<span class="built_in">compile</span>(</span><br><span class="line">        optimizer=<span class="string">&#x27;RMSprop&#x27;</span>,</span><br><span class="line">        loss=<span class="string">&#x27;binary_crossentropy&#x27;</span>,</span><br><span class="line">        metrics=METRICS</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="comment"># BATCH_SIZE, EPOCHS</span></span><br><span class="line">BATCH_SIZE = <span class="number">16</span> <span class="comment"># 기존 16</span></span><br><span class="line">EPOCHS = <span class="number">10</span> <span class="comment"># 에포크 10</span></span><br></pre></td></tr></table></figure>
+
+<pre><code>Weight for NORMAL: 1.96
+Weight for PNEUMONIA: 0.67
+
+
+
+
+
+(4185, 4185, 2.627357075351405, 2.911214953271028)
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    history4 = model4.fit(</span><br><span class="line">        train_ds,</span><br><span class="line">        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        epochs=EPOCHS,</span><br><span class="line">        validation_data=val_ds,</span><br><span class="line">        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        <span class="comment"># class_weight=class_weight,</span></span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<pre><code>Epoch 1/10
+261/261 [==============================] - 61s 196ms/step - loss: 0.3570 - accuracy: 0.8568 - precision: 0.9377 - recall: 0.8653 - val_loss: 0.9739 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000
+Epoch 2/10
+261/261 [==============================] - 51s 197ms/step - loss: 0.2024 - accuracy: 0.9301 - precision: 0.9486 - recall: 0.9578 - val_loss: 1.5693 - val_accuracy: 0.7337 - val_precision: 0.7337 - val_recall: 1.0000
+Epoch 3/10
+261/261 [==============================] - 52s 198ms/step - loss: 0.1726 - accuracy: 0.9428 - precision: 0.9596 - recall: 0.9637 - val_loss: 0.1951 - val_accuracy: 0.9135 - val_precision: 0.8985 - val_recall: 0.9948
+Epoch 4/10
+261/261 [==============================] - 52s 200ms/step - loss: 0.1619 - accuracy: 0.9471 - precision: 0.9614 - recall: 0.9678 - val_loss: 1.4994 - val_accuracy: 0.7327 - val_precision: 0.7327 - val_recall: 1.0000
+Epoch 5/10
+261/261 [==============================] - 52s 201ms/step - loss: 0.1628 - accuracy: 0.9454 - precision: 0.9643 - recall: 0.9624 - val_loss: 0.1149 - val_accuracy: 0.9567 - val_precision: 0.9465 - val_recall: 0.9974
+Epoch 6/10
+261/261 [==============================] - 54s 206ms/step - loss: 0.1351 - accuracy: 0.9555 - precision: 0.9689 - recall: 0.9713 - val_loss: 0.2684 - val_accuracy: 0.9038 - val_precision: 0.8853 - val_recall: 0.9987
+Epoch 7/10
+261/261 [==============================] - 55s 213ms/step - loss: 0.1226 - accuracy: 0.9602 - precision: 0.9742 - recall: 0.9723 - val_loss: 0.0957 - val_accuracy: 0.9644 - val_precision: 0.9572 - val_recall: 0.9961
+Epoch 8/10
+261/261 [==============================] - 48s 182ms/step - loss: 0.1121 - accuracy: 0.9641 - precision: 0.9777 - recall: 0.9740 - val_loss: 0.3674 - val_accuracy: 0.8500 - val_precision: 0.8315 - val_recall: 0.9974
+Epoch 9/10
+261/261 [==============================] - 49s 187ms/step - loss: 0.1173 - accuracy: 0.9588 - precision: 0.9741 - recall: 0.9704 - val_loss: 0.0868 - val_accuracy: 0.9702 - val_precision: 0.9815 - val_recall: 0.9777
+Epoch 10/10
+261/261 [==============================] - 47s 179ms/step - loss: 0.0968 - accuracy: 0.9686 - precision: 0.9807 - recall: 0.9772 - val_loss: 0.0856 - val_accuracy: 0.9692 - val_precision: 0.9841 - val_recall: 0.9737
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fig, ax = plt.subplots(<span class="number">1</span>, <span class="number">4</span>, figsize=(<span class="number">20</span>, <span class="number">3</span>))</span><br><span class="line">ax = ax.ravel()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i, met <span class="keyword">in</span> <span class="built_in">enumerate</span>([<span class="string">&#x27;precision&#x27;</span>, <span class="string">&#x27;recall&#x27;</span>, <span class="string">&#x27;accuracy&#x27;</span>, <span class="string">&#x27;loss&#x27;</span>]):</span><br><span class="line">    ax[i].plot(history4.history[met])</span><br><span class="line">    ax[i].plot(history4.history[<span class="string">&#x27;val_&#x27;</span> + met])</span><br><span class="line">    ax[i].set_title(<span class="string">&#x27;Model &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(met))</span><br><span class="line">    ax[i].set_xlabel(<span class="string">&#x27;epochs&#x27;</span>)</span><br><span class="line">    ax[i].set_ylabel(met)</span><br><span class="line">    ax[i].legend([<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;val&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/MainQuest4_files/MainQuest4_34_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">loss, accuracy, precision, recall = model4.evaluate(test_ds)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&#x27;Loss: <span class="subst">&#123;loss&#125;</span>,\nAccuracy: <span class="subst">&#123;accuracy&#125;</span>,\nPrecision: <span class="subst">&#123;precision&#125;</span>,\nRecall: <span class="subst">&#123;recall&#125;</span>&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>39/39 [==============================] - 4s 109ms/step - loss: 0.6984 - accuracy: 0.7997 - precision: 0.7634 - recall: 0.9846
+Loss: 0.6984289884567261,
+Accuracy: 0.7996794581413269,
+Precision: 0.763419508934021,
+Recall: 0.9846153855323792
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="5번째"><a href="#5번째" class="headerlink" title="5번째"></a>5번째</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> tensorflow.keras.applications.resnet50 <span class="keyword">import</span> ResNet50</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> tensorflow.keras.optimizers <span class="keyword">import</span> RMSprop,Adam</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">pretrained_model = ResNet50(weights= <span class="string">&#x27;imagenet&#x27;</span>, include_top=<span class="literal">False</span>, input_shape= (<span class="number">180</span>,<span class="number">180</span>,<span class="number">3</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment"># layer freezing시키기</span></span><br><span class="line"><span class="keyword">for</span> layers <span class="keyword">in</span> pretrained_model.layers:</span><br><span class="line">    layers.trainable = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># </span></span><br><span class="line">last_layer = pretrained_model.get_layer(<span class="string">&#x27;conv5_block3_1_relu&#x27;</span>)</span><br><span class="line">last_output = last_layer.output</span><br><span class="line"></span><br><span class="line">x=tf.keras.layers.Flatten()(last_output)</span><br><span class="line">x=tf.keras.layers.Dense(<span class="number">1024</span>,activation=<span class="string">&#x27;relu&#x27;</span>)(x)</span><br><span class="line">x=tf.keras.layers.Dropout(<span class="number">0.2</span>)(x)</span><br><span class="line">x=tf.keras.layers.Dense(<span class="number">256</span>,activation=<span class="string">&#x27;relu&#x27;</span>)(x)</span><br><span class="line">x=tf.keras.layers.Dropout(<span class="number">0.2</span>)(x)</span><br><span class="line">x=tf.keras.layers.Dense(<span class="number">1</span>,activation=<span class="string">&#x27;sigmoid&#x27;</span>)(x)</span><br><span class="line"></span><br><span class="line">model5=tf.keras.Model(pretrained_model.<span class="built_in">input</span>,x)</span><br><span class="line"></span><br><span class="line">model5.<span class="built_in">compile</span>(optimizer=RMSprop(lr=<span class="number">0.001</span>),</span><br><span class="line">              loss=<span class="string">&#x27;binary_crossentropy&#x27;</span>,</span><br><span class="line">               metrics=[<span class="string">&#x27;accuracy&#x27;</span>,<span class="string">&#x27;Precision&#x27;</span>,<span class="string">&#x27;Recall&#x27;</span>])</span><br><span class="line"></span><br><span class="line">BATCH_SIZE = <span class="number">16</span> <span class="comment"># 기존 16</span></span><br><span class="line">EPOCHS = <span class="number">10</span> <span class="comment"># 에포크 10</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> tf.device(<span class="string">&#x27;/GPU:0&#x27;</span>):</span><br><span class="line">    history5 = model5.fit(</span><br><span class="line">        train_ds,</span><br><span class="line">        steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        epochs=EPOCHS,</span><br><span class="line">        validation_data=val_ds,</span><br><span class="line">        validation_steps=VAL_IMG_COUNT // BATCH_SIZE,</span><br><span class="line">        class_weight=class_weight,</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<pre><code>Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5
+94773248/94765736 [==============================] - 0s 0us/step
+94781440/94765736 [==============================] - 0s 0us/step
+Epoch 1/10
+261/261 [==============================] - 63s 197ms/step - loss: 0.8281 - accuracy: 0.5663 - precision: 0.7847 - recall: 0.5748 - val_loss: 0.5007 - val_accuracy: 0.8308 - val_precision: 0.8522 - val_recall: 0.9304
+Epoch 2/10
+261/261 [==============================] - 51s 196ms/step - loss: 0.5116 - accuracy: 0.7428 - precision: 0.8999 - recall: 0.7368 - val_loss: 0.2967 - val_accuracy: 0.8750 - val_precision: 0.9321 - val_recall: 0.8956
+Epoch 3/10
+261/261 [==============================] - 50s 190ms/step - loss: 0.4165 - accuracy: 0.8000 - precision: 0.9319 - recall: 0.7889 - val_loss: 0.2597 - val_accuracy: 0.8875 - val_precision: 0.9523 - val_recall: 0.8911
+Epoch 4/10
+261/261 [==============================] - 52s 200ms/step - loss: 0.3895 - accuracy: 0.8161 - precision: 0.9444 - recall: 0.7995 - val_loss: 0.2842 - val_accuracy: 0.8654 - val_precision: 0.9785 - val_recall: 0.8349
+Epoch 5/10
+261/261 [==============================] - 52s 201ms/step - loss: 0.3707 - accuracy: 0.8218 - precision: 0.9424 - recall: 0.8104 - val_loss: 0.2724 - val_accuracy: 0.8702 - val_precision: 0.9772 - val_recall: 0.8425
+Epoch 6/10
+261/261 [==============================] - 54s 207ms/step - loss: 0.3463 - accuracy: 0.8372 - precision: 0.9482 - recall: 0.8261 - val_loss: 0.2136 - val_accuracy: 0.9048 - val_precision: 0.9689 - val_recall: 0.8990
+Epoch 7/10
+261/261 [==============================] - 48s 183ms/step - loss: 0.3200 - accuracy: 0.8573 - precision: 0.9577 - recall: 0.8455 - val_loss: 0.2679 - val_accuracy: 0.8731 - val_precision: 0.9817 - val_recall: 0.8429
+Epoch 8/10
+261/261 [==============================] - 46s 175ms/step - loss: 0.3210 - accuracy: 0.8566 - precision: 0.9525 - recall: 0.8500 - val_loss: 0.1881 - val_accuracy: 0.9269 - val_precision: 0.9587 - val_recall: 0.9412
+Epoch 9/10
+261/261 [==============================] - 48s 185ms/step - loss: 0.3094 - accuracy: 0.8597 - precision: 0.9532 - recall: 0.8532 - val_loss: 0.4380 - val_accuracy: 0.7875 - val_precision: 0.9964 - val_recall: 0.7137
+Epoch 10/10
+261/261 [==============================] - 47s 181ms/step - loss: 0.2815 - accuracy: 0.8822 - precision: 0.9643 - recall: 0.8745 - val_loss: 0.2010 - val_accuracy: 0.9135 - val_precision: 0.9828 - val_recall: 0.8978
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">fig, ax = plt.subplots(<span class="number">1</span>, <span class="number">4</span>, figsize=(<span class="number">20</span>, <span class="number">3</span>))</span><br><span class="line">ax = ax.ravel()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i, met <span class="keyword">in</span> <span class="built_in">enumerate</span>([<span class="string">&#x27;precision&#x27;</span>, <span class="string">&#x27;recall&#x27;</span>, <span class="string">&#x27;accuracy&#x27;</span>, <span class="string">&#x27;loss&#x27;</span>]):</span><br><span class="line">    ax[i].plot(history5.history[met])</span><br><span class="line">    ax[i].plot(history5.history[<span class="string">&#x27;val_&#x27;</span> + met])</span><br><span class="line">    ax[i].set_title(<span class="string">&#x27;Model &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(met))</span><br><span class="line">    ax[i].set_xlabel(<span class="string">&#x27;epochs&#x27;</span>)</span><br><span class="line">    ax[i].set_ylabel(met)</span><br><span class="line">    ax[i].legend([<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;val&#x27;</span>])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">loss, accuracy, precision, recall = model5.evaluate(test_ds)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&#x27;Loss: <span class="subst">&#123;loss&#125;</span>,\nAccuracy: <span class="subst">&#123;accuracy&#125;</span>,\nPrecision: <span class="subst">&#123;precision&#125;</span>,\nRecall: <span class="subst">&#123;recall&#125;</span>&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>39/39 [==============================] - 5s 118ms/step - loss: 0.4094 - accuracy: 0.8397 - precision: 0.8341 - recall: 0.9282
+Loss: 0.4094178378582001,
+Accuracy: 0.8397436141967773,
+Precision: 0.8341013789176941,
+Recall: 0.928205132484436
+</code></pre>
+<p><img src="/MainQuest4_files/MainQuest4_40_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Tag/" rel="tag">Tag</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/07/07/20240707-My-First-Post/"
+                    data-tooltip="나의 첫번째 포스트"
+                    aria-label="이전: 나의 첫번째 포스트"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/06/13/20240613-MainQuest3/"
+                    data-tooltip="MainQuest03 - 포켓몬 데이터 분석"
+                    aria-label="다음: MainQuest03 - 포켓몬 데이터 분석"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2024 KIHONG-KIM. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/07/07/20240707-My-First-Post/"
+                    data-tooltip="나의 첫번째 포스트"
+                    aria-label="이전: 나의 첫번째 포스트"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2024/06/13/20240613-MainQuest3/"
+                    data-tooltip="MainQuest03 - 포켓몬 데이터 분석"
+                    aria-label="다음: MainQuest03 - 포켓몬 데이터 분석"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://kihong-kim.github.io/2024/06/13/20240621-MainQuest4/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <h4 id="about-card-name">KIHONG-KIM</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-1uldwhrbdlrhk08ir4byjac5fgduzdgo3mfgffo7ymwfqmekcleegjte7mzu.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
