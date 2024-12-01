@@ -1,8 +1,8 @@
 ---
-title: Text and Typography
-description: Examples of text, typography, math equations, diagrams, flowcharts, pictures, videos, and more.
+title: 첫번째 글
+description: 이제 시작이다.
 author: cotes
-date: 2019-08-08 11:33:00 +0800
+date: 2024-12-01 11:33:00 +0800
 categories: [Blogging, Demo]
 tags: [typography]
 pin: true
