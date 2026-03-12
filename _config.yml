@@ -1,0 +1,13 @@
+title: "KIHONG's TIL"
+description: "Today I Learned — 매일 배운 것들을 기록합니다"
+url: "https://KIHONG-KIM.github.io"
+author: KIHONG KIM
+lang: ko
+
+permalink: /:year/:month/:day/:title/
+
+markdown: kramdown
+highlighter: rouge
+
+plugins:
+  - jekyll-feed
