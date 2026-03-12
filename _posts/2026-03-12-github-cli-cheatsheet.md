@@ -1,13 +1,157 @@
 ---
 layout: post
-title: "GitHub CLI (gh) 명령어 정리"
+title: "Git & GitHub CLI (gh) 명령어 정리"
 date: 2026-03-12
 tags: [github, cli, git, cheatsheet]
 ---
 
-> `gh` — GitHub의 공식 CLI. 브라우저 없이 PR, Issue, Actions 등을 터미널에서 처리.
+> `git` — 버전 관리 / `gh` — GitHub 공식 CLI. 브라우저 없이 PR, Issue, Actions 등을 터미널에서 처리.
 
-## 설치 & 인증
+---
+
+## Git 기본
+
+```bash
+# 초기화 & 설정
+git init
+git config --global user.name "이름"
+git config --global user.email "이메일"
+
+# 상태 확인
+git status
+git log --oneline --graph --all   # 브랜치 그래프 포함
+git diff                          # unstaged 변경사항
+git diff --staged                 # staged 변경사항
+```
+
+---
+
+## Git 스테이징 & 커밋
+
+```bash
+git add 파일명
+git add .                         # 전체 추가
+git add -p                        # 변경사항 조각별로 선택
+
+git commit -m "메시지"
+git commit --amend                # 마지막 커밋 수정 (push 전에만)
+
+# 스테이징 취소
+git restore --staged 파일명
+# 변경사항 되돌리기
+git restore 파일명
+```
+
+---
+
+## Git 브랜치
+
+```bash
+git branch                        # 브랜치 목록
+git branch 브랜치명               # 브랜치 생성
+git switch 브랜치명               # 브랜치 이동
+git switch -c 브랜치명            # 생성 + 이동
+
+git branch -d 브랜치명            # 브랜치 삭제 (merged)
+git branch -D 브랜치명            # 강제 삭제
+
+git merge 브랜치명                # 현재 브랜치에 머지
+git rebase main                   # main 위로 rebase
+```
+
+---
+
+## Git 원격 저장소
+
+```bash
+git remote add origin URL
+git remote -v                     # 원격 목록
+
+git fetch                         # 원격 변경사항 가져오기 (머지 안 함)
+git pull                          # fetch + merge
+git pull --rebase                 # fetch + rebase
+
+git push origin 브랜치명
+git push -u origin 브랜치명      # upstream 설정
+git push --force-with-lease       # 안전한 force push
+```
+
+---
+
+## Git 되돌리기
+
+```bash
+# 커밋 되돌리기 (히스토리 보존)
+git revert HEAD
+git revert 커밋해시
+
+# 커밋 취소 (로컬에서만)
+git reset --soft HEAD~1           # 커밋만 취소, 변경사항 staged 유지
+git reset --mixed HEAD~1          # 커밋 + unstaged로 내림 (기본값)
+git reset --hard HEAD~1           # 커밋 + 변경사항 모두 삭제 ⚠️
+
+# 특정 파일만 이전 커밋 상태로
+git checkout 커밋해시 -- 파일명
+```
+
+---
+
+## Git Stash
+
+```bash
+git stash                         # 현재 변경사항 임시 저장
+git stash push -m "설명"
+git stash list
+git stash pop                     # 꺼내기 + 목록에서 제거
+git stash apply stash@{0}         # 꺼내기 (목록 유지)
+git stash drop stash@{0}          # 삭제
+```
+
+---
+
+## Git Worktree
+
+```bash
+# 같은 레포를 다른 폴더에서 다른 브랜치로 작업
+git worktree add ../feature-branch feature/some-feature
+git worktree list
+git worktree remove ../feature-branch
+```
+
+---
+
+## Git 유용한 명령어
+
+```bash
+# 특정 문자열이 추가/삭제된 커밋 찾기
+git log -S "검색어"
+
+# 특정 파일의 변경 이력
+git log --follow -p 파일명
+
+# 누가 이 줄을 작성했나
+git blame 파일명
+
+# 두 커밋 사이 diff
+git diff 커밋A..커밋B
+
+# 커밋 간 파일 목록만
+git diff --name-only 커밋A..커밋B
+
+# 버그 유발 커밋 이진 탐색
+git bisect start
+git bisect bad                    # 현재 커밋 = 버그 있음
+git bisect good 커밋해시          # 정상이었던 커밋
+# → 자동으로 중간 커밋 체크아웃, 반복
+git bisect reset                  # 종료
+
+# .gitignore에 이미 추적된 파일 제거
+git rm --cached 파일명
+```
+
+---
+
+## gh 설치 & 인증
 
 ```bash
 # 설치 (mac)
